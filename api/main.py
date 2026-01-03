@@ -1,4 +1,5 @@
 import base64
+from typing import Annotated
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -29,6 +30,11 @@ def get_elevenlabs_client() -> ElevenLabsClient:
     return ElevenLabsClient()
 
 
+# Annotated types for dependency injection
+OpenRouterDep = Annotated[OpenRouterClient, Depends(get_openrouter_client)]
+ElevenLabsDep = Annotated[ElevenLabsClient, Depends(get_elevenlabs_client)]
+
+
 class FrameRequest(BaseModel):
     """Request model for frame processing"""
 
@@ -53,8 +59,8 @@ async def root() -> dict[str, str]:
 @app.post("/process-frame", response_model=FrameResponse)
 async def process_frame(
     request: FrameRequest,
-    openrouter_client: OpenRouterClient = Depends(get_openrouter_client),
-    elevenlabs_client: ElevenLabsClient = Depends(get_elevenlabs_client),
+    openrouter_client: OpenRouterDep,
+    elevenlabs_client: ElevenLabsDep,
 ) -> FrameResponse:
     """
     Process a video frame and generate an audio description
