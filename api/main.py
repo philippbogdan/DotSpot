@@ -3,8 +3,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import settings
-from services.openrouter import openrouter_client
-from services.tts import tts_service
+from clients.openrouter import openrouter_client
+from clients.elevenlabs import elevenlabs_client
 
 app = FastAPI(title="Blindsighted API")
 
@@ -59,7 +59,7 @@ async def process_frame(request: FrameRequest) -> FrameResponse:
         description = await openrouter_client.describe_image(request.image)
 
         # Generate audio using ElevenLabs
-        audio_bytes = tts_service.text_to_speech(description)
+        audio_bytes = elevenlabs_client.text_to_speech(description)
         audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
 
         processing_time = (time.time() - start_time) * 1000

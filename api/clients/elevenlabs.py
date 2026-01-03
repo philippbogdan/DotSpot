@@ -3,8 +3,8 @@ from elevenlabs.client import ElevenLabs
 from config import settings
 
 
-class TextToSpeechService:
-    """Service for converting text to speech using ElevenLabs"""
+class ElevenLabsClient:
+    """Client for interacting with ElevenLabs Text-to-Speech API"""
 
     def __init__(self) -> None:
         if not settings.elevenlabs_api_key:
@@ -46,4 +46,4 @@ class TextToSpeechService:
             raise
 
 
-tts_service = TextToSpeechService()
+elevenlabs_client = ElevenLabsClient()
