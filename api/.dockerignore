@@ -1,0 +1,31 @@
+# Environment files
+.env
+.env.local
+.env.*
+
+# Python cache
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+TESTING.md
+*.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

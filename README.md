@@ -15,16 +15,19 @@ blindsighted/
 ### App Setup
 
 1. Navigate to the app directory:
+
 ```bash
 cd app
 ```
 
 2. Install dependencies:
+
 ```bash
 yarn install
 ```
 
 3. Start the development server:
+
 ```bash
 yarn start
 ```
@@ -32,16 +35,19 @@ yarn start
 ### API Setup
 
 1. Navigate to the api directory:
+
 ```bash
 cd api
 ```
 
 2. Install dependencies using uv:
+
 ```bash
 uv pip install -e ".[dev]"
 ```
 
 3. Run the API:
+
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -55,9 +61,15 @@ See individual README files in `app/` and `api/` directories for more details.
 ## Build + Deploy
 
 eas login -> enter email + pword
-# ios build
+
+### ios build
+
+```bash
 eas build --platform ios
-# android build
-eas build --profile development --platform android
+```
 
+### android build
 
+```bash
+eas build  --platform android
+```
