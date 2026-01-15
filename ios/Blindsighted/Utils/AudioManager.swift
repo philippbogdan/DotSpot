@@ -39,11 +39,11 @@ class AudioManager: ObservableObject {
 
     do {
       // Set category to playback with default mode
-      // Default mode supports both voice and music playback to Bluetooth devices
+      // Playback category automatically routes to Bluetooth devices (including Meta Wearables)
+      // No options needed - adding Bluetooth options causes error -50
       try audioSession.setCategory(
         .playback,
-        mode: .default,
-        options: [.allowBluetooth, .allowBluetoothA2DP]
+        mode: .default
       )
 
       // Activate the audio session
