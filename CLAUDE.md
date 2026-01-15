@@ -14,47 +14,32 @@ Blindsighted is a mobile app with FastAPI backend that provides AI-powered visua
 
 ## Development Commands
 
-### App (Expo/React Native)
+### iOS App (Swift/SwiftUI)
 
 ```bash
 cd ios
-yarn install                    # Install dependencies
-yarn start                      # Start Expo dev server
-yarn ios                        # Run on iOS simulator
-yarn android                    # Run on Android emulator
-npx tsc --noEmit               # Type check
+open Blindsighted.xcodeproj     # Open in Xcode
+
+# Build and run on simulator
+xcodebuild -project Blindsighted.xcodeproj \
+  -scheme Blindsighted \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+
+# Build for device
+xcodebuild -project Blindsighted.xcodeproj \
+  -scheme Blindsighted \
+  -sdk iphoneos
 ```
 
-**expo-meta-wearables dependency**:
-- **Production/EAS builds**: Uses npm package `expo-meta-wearables@^0.2.2` from package.json
-- **Local development**: Uses npm package by default, but can be linked for active development
+**Dependencies**:
+- Meta Wearables DAT SDK (integrated via Swift Package Manager in Xcode)
+  - `MWDATCore` - Core wearables functionality
+  - `MWDATCamera` - Camera streaming and photo capture
+  - Package URL: `https://github.com/facebook/meta-wearables-dat-ios`
+  - Version: 0.3.0
 
-**When to link**: Only if you're actively developing features in `expo-meta-wearables` alongside this app. Most developers won't need this.
-
-**Setup local link** (for expo-meta-wearables development):
-```bash
-# 1. Clone expo-meta-wearables as a sibling directory
-cd /Users/dh/Projects/github.com/DJRHails
-git clone https://github.com/DJRHails/expo-meta-wearables.git
-
-# 2. Register the package for linking
-cd expo-meta-wearables
-yarn install
-yarn link
-
-# 3. Link to the app
-cd ../blindsighted/app
-yarn link expo-meta-wearables
-```
-
-**Unlink and return to npm version**:
-```bash
-cd ios
-yarn unlink expo-meta-wearables
-yarn install --force
-```
-
-**How it works**: When linked, local changes to `expo-meta-wearables` are immediately reflected in the app without republishing. EAS builds always use the npm package, ignoring local symlinks.
+**Note**: The app is based on Meta's CameraAccess sample from the DAT SDK, customized for Blindsighted.
 
 ### API (FastAPI/Python)
 
@@ -110,49 +95,28 @@ See `api/main.py:22-30` for examples.
 ### Configuration Management
 
 - **API**: Uses `pydantic-settings` to load from `.env` files. See `api/config.py`.
-- **App**: Constants in `app/src/config/constants.ts` (API_URL, FPS, etc.)
-
-### Video Streaming Service
-
-The app's video stream service (`app/src/services/videoStream.ts`) is a singleton that:
-1. Captures frames from Meta Wearables at configured FPS
-2. Converts to base64 and sends to API
-3. Receives audio response and plays it back
-
-**Key detail**: The streaming interval is managed in `App.tsx` (not in the service), calling `captureAndSendFrame()` periodically.
+- **iOS App**: Configuration is managed via Info.plist and app entitlements. No external config files needed for the iOS app itself.
 
 ## CI/CD & Releases
 
-### EAS Build (Expo Application Services)
+### iOS Build
 
-Builds are triggered via GitHub Actions. EAS requires authentication.
+iOS builds are performed using Xcode and can be distributed via:
+- **Development**: Build directly from Xcode to physical device or simulator
+- **TestFlight**: Archive and upload to App Store Connect for beta testing
+- **App Store**: Production releases via App Store Connect
 
-**Setup**:
-```bash
-cd ios
-npm install -g eas-cli
-eas login
-eas build --platform ios --profile development
-eas build --platform android --profile development
-```
-
-**Build Profiles** (see `app/eas.json`):
-- `development` - Dev client with internal distribution
-- `preview` - Internal distribution for testing
-- `production` - App Store/Play Store builds with auto-increment
+**Creating an Archive**:
+1. In Xcode: Product → Archive
+2. Window → Organizer to manage archives
+3. Distribute App → choose distribution method
 
 ### GitHub Actions Workflows
 
-- **PR Checks** (`.github/workflows/pr-checks.yml`): Type check (tsc), lint/format (ruff), type check (mypy)
+- **PR Checks** (`.github/workflows/pr-checks.yml`): Lint/format (ruff), type check (mypy) for API
 - **Release** (`.github/workflows/release.yml`): Triggered on `v*.*.*` tags
-  - Builds iOS via EAS
-  - Builds Android via EAS
-  - Builds Docker image and pushes to `ghcr.io/djrhails/blindsighted/api`
+  - Builds Docker image for API and pushes to `ghcr.io/djrhails/blindsighted/api`
   - Creates GitHub release with changelog
-- **Manual Build** (`.github/workflows/manual-build.yml`): Manually trigger builds
-
-**Required Secrets**:
-- `EXPO_TOKEN` - EAS authentication token (get via `eas login` → `eas whoami --json`)
 
 **Creating a Release**:
 ```bash
@@ -160,11 +124,10 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-### Package Manager Differences
+### Package Manager
 
-- **App**: Uses `yarn` (has `yarn.lock`)
+- **iOS App**: Swift Package Manager (integrated in Xcode)
 - **API**: Uses `uv` for Python dependency management
-- **CI**: App CI uses `yarn install --frozen-lockfile` for reproducible builds
 
 ## Python Code Style
 
@@ -173,12 +136,31 @@ git push origin v1.2.3
 - **Imports**: Auto-sorted by ruff (isort)
 - **Python version**: 3.11+ required
 
-## App Architecture Notes
+## iOS App Architecture
 
-- **State management**: React hooks (useState, useEffect), no Redux
-- **Debouncing**: Custom `useDebounce` hook in `app/src/hooks/useDebounce.ts` for UI updates
-- **Modal pattern**: Mock Device Kit info shown in Modal component (`App.tsx:239-257`)
-- **Meta Wearables SDK**: Initialized once on mount, listeners added for connection/recording events
+- **UI Framework**: SwiftUI with declarative views
+- **State Management**: SwiftUI's `@StateObject`, `@ObservedObject`, and `@Published` properties
+- **Architecture Pattern**: MVVM (Model-View-ViewModel)
+  - **Views**: SwiftUI views in `ios/Blindsighted/Views/`
+  - **ViewModels**: Observable objects in `ios/Blindsighted/ViewModels/`
+  - **Models**: Data models from Meta Wearables DAT SDK
+
+### Key Components
+
+- **WearablesViewModel** (`ios/Blindsighted/ViewModels/WearablesViewModel.swift`): Manages device connection and registration
+- **StreamSessionViewModel** (`ios/Blindsighted/ViewModels/StreamSessionViewModel.swift`): Handles video streaming, photo capture, and session state
+- **Meta Wearables DAT SDK Integration**:
+  - SDK configured once at app launch in `BlindsightedApp.swift`
+  - Listener pattern for SDK events (state changes, video frames, errors)
+  - `StreamSession` manages streaming lifecycle
+
+### Video Streaming Flow
+
+1. User taps "Start Streaming" → requests camera permission
+2. `StreamSession.start()` initiates connection to glasses
+3. Video frames received via `videoFramePublisher` listener
+4. Frames converted to `UIImage` and displayed in real-time
+5. User can capture photos during stream with `capturePhoto()`
 
 ## Troubleshooting
 
@@ -187,57 +169,53 @@ git push origin v1.2.3
 - **Xcode**: 26.2+
 - **Swift**: 6.2+
 - **iOS Deployment Target**: 17.0+
-- **CocoaPods**: Latest version
 
 The project is configured for:
-- Swift version: 6.2 (in `ios/blindsighted.xcodeproj/project.pbxproj` and `expo-meta-wearables` podspec)
+- Swift version: 6.2 (in `ios/Blindsighted.xcodeproj/project.pbxproj`)
 - iOS deployment target: 17.0 (matches Meta Wearables SDK requirement)
 
 ### Meta Wearables SDK Package Not Found
 
 If you see errors like `Missing package product 'MWDATCore'` or `Missing package product 'MWDATCamera'`:
 
-**Problem**: CocoaPods' Swift Package Manager integration may not automatically resolve packages in Xcode 26.2+.
+**Problem**: Swift Package Manager may not automatically resolve packages.
 
 **Solution 1: Resolve in Xcode** (Recommended)
-1. Open `ios/blindsighted.xcworkspace` in Xcode
+1. Open `ios/Blindsighted.xcodeproj` in Xcode
 2. Go to **File → Packages → Resolve Package Versions**
 3. Wait for resolution to complete
 4. Clean build folder: **Product → Clean Build Folder** (⇧⌘K)
 5. Build the project
 
 **Solution 2: Manually Add SPM Dependency**
-If automatic resolution fails, manually add the package to the Pods project:
+If automatic resolution fails, manually add the package:
 
-1. Open `ios/blindsighted.xcworkspace` in Xcode
-2. In Project Navigator, select **Pods.xcodeproj**
-3. Select the **Pods** project (not a target)
-4. Go to **Package Dependencies** tab
-5. Click **+** to add a package
+1. Open `ios/Blindsighted.xcodeproj` in Xcode
+2. Select the **Blindsighted** project in Project Navigator
+3. Select the **Blindsighted** target
+4. Go to **General** tab → **Frameworks, Libraries, and Embedded Content**
+5. Click **+** → **Add Package Dependency**
 6. Enter: `https://github.com/facebook/meta-wearables-dat-ios`
 7. Set version: **Exact Version 0.3.0**
-8. Add products: **MWDATCore** and **MWDATCamera** to the **ExpoMetaWearables** target
+8. Select products: **MWDATCore** and **MWDATCamera**
 9. Clean and rebuild
 
 **Solution 3: Clear Derived Data**
 ```bash
-cd ios
-rm -rf ~/Library/Developer/Xcode/DerivedData/blindsighted-*
-rm -rf Pods Podfile.lock blindsighted.xcworkspace
-pod install
+rm -rf ~/Library/Developer/Xcode/DerivedData/Blindsighted-*
 ```
 
 Then open Xcode and use Solution 1 or 2.
 
 ### Swift Version Mismatch
 
-If you see Swift version errors, ensure consistency across:
-- Main project: `ios/blindsighted.xcodeproj` → Build Settings → Swift Language Version = 6.2
-- expo-meta-wearables: `/Users/dh/Projects/github.com/DJRHails/expo-meta-wearables/ios/ExpoMetaWearables.podspec` → `s.swift_version = '6.2'`
+If you see Swift version errors:
 
-After changing, run:
-```bash
-cd ios
-rm -rf Pods Podfile.lock
-pod install
-```
+1. Open `ios/Blindsighted.xcodeproj` in Xcode
+2. Select the **Blindsighted** project in Project Navigator
+3. Select the **Blindsighted** target
+4. Go to **Build Settings** tab
+5. Search for "Swift Language Version"
+6. Ensure it's set to **Swift 6.2** (or 6.0+)
+7. Clean build folder: **Product → Clean Build Folder** (⇧⌘K)
+8. Rebuild the project
