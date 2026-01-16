@@ -130,7 +130,7 @@ See `ios/Config.xcconfig.example` and `api/.env.example` for configuration detai
 
 ## License
 
-Free-for-all. Use this however you want; I'd love to be in the loop, but no pressure.
+**In short:** Keep it open source, it's fine to make money with it. I'd love to see what you build with it.
 
 **Exception**: The iOS app incorporates sample code from Meta's [meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios) repository, which has its own license terms. Check that repo for Meta's SDK license.
 
@@ -140,6 +140,7 @@ I built this because:
 
 1. Getting Meta's wearables SDK working took a bit of time without being 'fun'.
 2. Originally I had custom WebRTC streaming (which took a lot of time); Pentaform showed me LiveKit which seems much more suitable for a hackathon use-case so I swapped over to that for this project, but also has it's own pain points.
+3. Unlikely typical hackathons which are one-and-done, it'd be great to have
 
 If this helps you build something cool, that's awesome. If you find a better way to do any of this, even better.
 
