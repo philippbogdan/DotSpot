@@ -11,5 +11,6 @@ LIVEKIT_AGENT_NAME = example_agent
 
 // Development Configuration (optional - for hardcoded token testing)
 // Leave empty to generate tokens dynamically via API
+// IMPORTANT: For empty values, use "= " (equals with nothing after), NOT "= """
 LIVEKIT_DEV_TOKEN =
 LIVEKIT_DEV_ROOM_NAME =

@@ -171,7 +171,7 @@ async def entrypoint(ctx: JobContext) -> None:
     tts_instance = elevenlabs.TTS(
         api_key=settings.elevenlabs_api_key,
         voice_id=settings.elevenlabs_voice_id,
-        model="eleven_turbo_v2_5",
+        model="eleven_flash_v2_5",
         # Keep auto_mode at default (True) to use ElevenLabs' optimized streaming
         apply_text_normalization="on",  # Normalize newlines and other text artifacts
     )

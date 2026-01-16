@@ -62,10 +62,17 @@ struct LiveKitConfig: Codable {
         // Note: APIKey and APISecret are available but not used in current implementation
         // They would be needed for generating tokens on-device
 
+        // Helper to check if string is truly empty (handles "" from xcconfig)
+        func isNonEmpty(_ value: String?) -> Bool {
+            guard let value = value, !value.isEmpty else { return false }
+            // Treat literal "" as empty (happens when xcconfig has = "" instead of just =)
+            return value != "\"\""
+        }
+
         // If dev token is provided, use manual mode (for development)
-        if let devToken = devToken, !devToken.isEmpty,
-           let serverURL = serverURL, !serverURL.isEmpty,
-           let roomName = devRoomName, !roomName.isEmpty {
+        if let devToken = devToken, isNonEmpty(devToken),
+           let serverURL = serverURL, isNonEmpty(serverURL),
+           let roomName = devRoomName, isNonEmpty(roomName) {
             return LiveKitConfig.manualMode(
                 serverURL: serverURL,
                 token: devToken,
@@ -75,7 +82,7 @@ struct LiveKitConfig: Codable {
         }
 
         // Otherwise, use API mode if API URL is available (for production)
-        if let apiBaseURL = apiBaseURL, !apiBaseURL.isEmpty {
+        if let apiBaseURL = apiBaseURL, isNonEmpty(apiBaseURL) {
             return LiveKitConfig.apiMode(apiURL: apiBaseURL, agentName: agentName)
         }
 

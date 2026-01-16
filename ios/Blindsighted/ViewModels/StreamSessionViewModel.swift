@@ -218,6 +218,11 @@ class StreamSessionViewModel: ObservableObject {
           let deviceId = "glasses-\(UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown")"
           let response = try await client.startSession(deviceId: deviceId, agentId: config.agentName)
 
+          // Log the token received from API
+          NSLog("[Blindsighted] LiveKit token from API: \(response.token)")
+          NSLog("[Blindsighted] LiveKit URL: \(response.livekitUrl)")
+          NSLog("[Blindsighted] Room name: \(response.roomName)")
+
           credentials = LiveKitSessionCredentials(
             sessionId: response.sessionId,
             serverURL: response.livekitUrl,
@@ -229,9 +234,10 @@ class StreamSessionViewModel: ObservableObject {
 
         case .manual:
           // Use manual credentials
-          guard let serverURL = config.serverURL,
-                let token = config.token,
-                let roomName = config.roomName else {
+          guard let serverURL = config.serverURL, !serverURL.isEmpty,
+                let token = config.token, !token.isEmpty,
+                let roomName = config.roomName, !roomName.isEmpty else {
+            NSLog("[Blindsighted] Invalid manual credentials - serverURL: '\(config.serverURL ?? "")', token: '\(config.token ?? "")', roomName: '\(config.roomName ?? "")'")
             throw LiveKitError.invalidConfiguration
           }
           credentials = LiveKitSessionCredentials(
@@ -240,7 +246,7 @@ class StreamSessionViewModel: ObservableObject {
             token: token,
             roomName: roomName
           )
-          NSLog("[Blindsighted] Using manual LiveKit credentials")
+          NSLog("[Blindsighted] Using manual LiveKit credentials - serverURL: '\(serverURL)', token: '\(token)', roomName: '\(roomName)'")
         }
 
         // Connect to LiveKit with credentials
@@ -423,6 +429,11 @@ class StreamSessionViewModel: ObservableObject {
       let deviceId = "glasses-\(UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown")"
       let response = try await client.startSession(deviceId: deviceId, agentId: config.agentName)
 
+      // Log the token received from API
+      NSLog("[Blindsighted] LiveKit token from API (manual connect): \(response.token)")
+      NSLog("[Blindsighted] LiveKit URL: \(response.livekitUrl)")
+      NSLog("[Blindsighted] Room name: \(response.roomName)")
+
       credentials = LiveKitSessionCredentials(
         sessionId: response.sessionId,
         serverURL: response.livekitUrl,
@@ -432,9 +443,10 @@ class StreamSessionViewModel: ObservableObject {
       self.liveKitSessionId = response.sessionId
 
     case .manual:
-      guard let serverURL = config.serverURL,
-            let token = config.token,
-            let roomName = config.roomName else {
+      guard let serverURL = config.serverURL, !serverURL.isEmpty,
+            let token = config.token, !token.isEmpty,
+            let roomName = config.roomName, !roomName.isEmpty else {
+        NSLog("[Blindsighted] Invalid manual credentials in reconnect - serverURL: '\(config.serverURL ?? "")', token: '\(config.token ?? "")', roomName: '\(config.roomName ?? "")'")
         throw LiveKitError.invalidConfiguration
       }
       credentials = LiveKitSessionCredentials(
@@ -443,6 +455,7 @@ class StreamSessionViewModel: ObservableObject {
         token: token,
         roomName: roomName
       )
+      NSLog("[Blindsighted] Using manual LiveKit credentials in reconnect - serverURL: '\(serverURL)', token: '\(token)', roomName: '\(roomName)'")
     }
 
     try await manager.connect(credentials: credentials, config: config)

@@ -140,7 +140,7 @@ I built this because:
 
 1. Getting Meta's wearables SDK working took a bit of time without being 'fun'.
 2. Originally I had custom WebRTC streaming (which took a lot of time); Pentaform showed me LiveKit which seems much more suitable for a hackathon use-case so I swapped over to that for this project, but also has it's own pain points.
-3. Unlikely typical hackathons which are one-and-done, it'd be great to have
+3. Unlikely typical hackathons which are one-and-done, it'd be great to have something people can iterate on.
 
 If this helps you build something cool, that's awesome. If you find a better way to do any of this, even better.
 
