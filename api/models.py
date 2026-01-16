@@ -40,7 +40,7 @@ class StreamSession(Base):
     # Metadata
     device_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
-    metadata: Mapped[str | None] = mapped_column(Text, nullable=True)
+    session_metadata: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Recording(Base):
