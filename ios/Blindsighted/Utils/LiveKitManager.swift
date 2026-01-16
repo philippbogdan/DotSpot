@@ -41,12 +41,17 @@ enum LiveKitError: Error, LocalizedError {
 /// Manages LiveKit room connection and media publishing
 @MainActor
 class LiveKitManager: ObservableObject {
+    // Track naming constants
+    private static let videoTrackName = "glasses-video"
+    private static let audioTrackName = "microphone"
+
     @Published var connectionState: LiveKitConnectionState = .disconnected
     @Published var isPublishingVideo: Bool = false
     @Published var isPublishingAudio: Bool = false
     @Published var isMuted: Bool = false
     @Published var isReceivingRemoteAudio: Bool = false
     @Published var remoteParticipantCount: Int = 0
+
 
     private var room: Room?
     private var videoTrack: LocalVideoTrack?
@@ -60,6 +65,7 @@ class LiveKitManager: ObservableObject {
     private var frameCount: Int64 = 0
     private var lastFrameTime: CMTime = .zero
     private var startTime: CMTime?
+    private var videoTrackPendingPublish: Bool = false  // Flag to publish after first frame
 
     // Remote audio tracks (for monitoring agent speech)
     private var remoteAudioTracks: Set<String> = []
@@ -110,24 +116,36 @@ class LiveKitManager: ObservableObject {
         room = nil
         config = nil
         connectionState = .disconnected
+        videoTrackPendingPublish = false
     }
 
     // MARK: - Video Publishing
 
     /// Start publishing video from glasses with custom video source
     func startPublishingVideo(videoSize: CGSize, frameRate: Int32 = 24) async throws {
-        guard let room = room, connectionState == .connected else {
+        guard let room = room else {
+            NSLog("[LiveKit] Cannot start video publishing: no room")
+            throw LiveKitError.notConnected
+        }
+        guard connectionState == .connected else {
+            NSLog("[LiveKit] Cannot start video publishing: not connected (state: \(connectionState))")
             throw LiveKitError.notConnected
         }
 
-        guard let config = config, config.enableVideo else {
+        guard let config = config else {
+            NSLog("[LiveKit] Cannot start video publishing: no config")
+            return
+        }
+        guard config.enableVideo else {
+            NSLog("[LiveKit] Cannot start video publishing: video disabled in config")
             return
         }
 
+        NSLog("[LiveKit] Setting up video track at \(videoSize.width)x\(videoSize.height), \(frameRate)fps")
         do {
             // Create custom video track from buffer for glasses frames
             let track = try LocalVideoTrack.createBufferTrack(
-                name: "glasses-video",
+                name: Self.videoTrackName,
                 source: .camera,
                 options: BufferCaptureOptions(
                     dimensions: Dimensions(
@@ -140,31 +158,36 @@ class LiveKitManager: ObservableObject {
             )
 
             // Get the buffer capturer from the track
-            self.bufferCapturer = track.capturer as? BufferCapturer
+            guard let bufferCapturer = track.capturer as? BufferCapturer else {
+                NSLog("[LiveKit] Failed to get buffer capturer from track")
+                throw LiveKitError.videoSourceCreationFailed
+            }
+
+            self.bufferCapturer = bufferCapturer
             self.videoTrack = track
             self.startTime = nil
             self.frameCount = 0
+            self.videoTrackPendingPublish = true  // Will publish after first frame
 
-            // Publish the custom video track
-            try await room.localParticipant.publish(videoTrack: track)
-
-            isPublishingVideo = true
-            NSLog("[LiveKit] Started publishing custom video track at \(videoSize.width)x\(videoSize.height)")
+            NSLog("[LiveKit] Video track created, waiting for first frame before publishing...")
         } catch {
-            NSLog("[LiveKit] Failed to publish video: \(error)")
+            NSLog("[LiveKit] Failed to create video track: \(error)")
             throw LiveKitError.videoPublishFailed
         }
     }
 
     /// Publish a video frame from glasses to LiveKit
+    /// Always accepts frames; silently drops them if track isn't ready yet
     func publishVideoFrame(_ pixelBuffer: CVPixelBuffer, timestamp: CMTime) {
-        guard isPublishingVideo, let bufferCapturer = bufferCapturer else {
+        // Silently drop frames if we don't have a buffer capturer yet
+        guard let bufferCapturer = bufferCapturer else {
             return
         }
 
         // Initialize start time on first frame
         if startTime == nil {
             startTime = timestamp
+            NSLog("[LiveKit] First frame captured for '\(Self.videoTrackName)', starting timestamp tracking")
         }
 
         // Calculate frame timestamp relative to start (in nanoseconds)
@@ -179,14 +202,80 @@ class LiveKitManager: ObservableObject {
         )
 
         frameCount += 1
+
+        // Publish track to room after first frame has been captured
+        if videoTrackPendingPublish && frameCount == 1 {
+            Task { @MainActor in
+                await publishVideoTrackToRoom()
+            }
+        }
+
+        // Log progress periodically (every 100 frames)
+        if frameCount % 100 == 0 {
+            NSLog("[LiveKit] Published \(frameCount) frames to '\(Self.videoTrackName)'")
+        }
+    }
+
+    /// Publish the prepared video track to the room (called after first frame)
+    private func publishVideoTrackToRoom() async {
+        guard let room = room, let track = videoTrack else {
+            NSLog("[LiveKit] Cannot publish track: missing room or track")
+            videoTrackPendingPublish = false
+            return
+        }
+
+        guard connectionState == .connected else {
+            NSLog("[LiveKit] Cannot publish track: not connected")
+            videoTrackPendingPublish = false
+            return
+        }
+
+        NSLog("[LiveKit] Publishing video track to room (after first frame)...")
+        NSLog("[LiveKit] Room state: connectionState=\(room.connectionState), participants=\(room.allParticipants.count)")
+
+        // Publish the custom video track with options
+        let publishOptions = VideoPublishOptions(
+            simulcast: false,
+        )
+
+        do {
+            try await room.localParticipant.publish(videoTrack: track, options: publishOptions)
+            isPublishingVideo = true
+            videoTrackPendingPublish = false
+            NSLog("[LiveKit] Successfully published video track '\(Self.videoTrackName)'")
+        } catch let error as NSError {
+            NSLog("[LiveKit] Failed to publish video track '\(Self.videoTrackName)'")
+            NSLog("[LiveKit] Error domain: \(error.domain), code: \(error.code)")
+            NSLog("[LiveKit] Error description: \(error.localizedDescription)")
+            NSLog("[LiveKit] Error userInfo: \(error.userInfo)")
+
+            // Clean up on failure
+            self.videoTrack = nil
+            self.bufferCapturer = nil
+            self.videoTrackPendingPublish = false
+        }
     }
 
     /// Stop publishing video
     func stopPublishingVideo() async {
-        guard let room = room, let track = videoTrack else { return }
+        // Cancel pending publish if it hasn't happened yet
+        if videoTrackPendingPublish {
+            NSLog("[LiveKit] Cancelling pending video track publish")
+            videoTrackPendingPublish = false
+        }
+
+        guard let room = room, let track = videoTrack else {
+            // Clean up state even if no track/room
+            videoTrack = nil
+            bufferCapturer = nil
+            isPublishingVideo = false
+            startTime = nil
+            frameCount = 0
+            return
+        }
 
         do {
-            // Find the publication for this track
+            // Find the publication for this track (only if it was actually published)
             if let publication = room.localParticipant.localVideoTracks.first(where: { $0.track === track }) {
                 try await room.localParticipant.unpublish(publication: publication)
             }
@@ -196,9 +285,9 @@ class LiveKitManager: ObservableObject {
             isPublishingVideo = false
             startTime = nil
             frameCount = 0
-            NSLog("[LiveKit] Stopped publishing video track")
+            NSLog("[LiveKit] Stopped publishing video track '\(Self.videoTrackName)'")
         } catch {
-            NSLog("[LiveKit] Error stopping video publishing: \(error)")
+            NSLog("[LiveKit] Error stopping video publishing for track '\(Self.videoTrackName)': \(error)")
         }
     }
 
@@ -207,6 +296,7 @@ class LiveKitManager: ObservableObject {
     /// Start publishing audio from glasses microphone
     func startPublishingAudio() async throws {
         guard let room = room, connectionState == .connected else {
+            NSLog("[LiveKit] Cannot start audio publishing: not connected")
             throw LiveKitError.notConnected
         }
 
@@ -219,8 +309,10 @@ class LiveKitManager: ObservableObject {
                 self.audioTrack = publication.track as? LocalAudioTrack
                 isPublishingAudio = true
                 isMuted = false
+                NSLog("[LiveKit] Started publishing audio track '\(Self.audioTrackName)'")
             }
         } catch {
+            NSLog("[LiveKit] Failed to start audio publishing: \(error)")
             throw LiveKitError.audioPublishFailed
         }
     }
@@ -228,23 +320,25 @@ class LiveKitManager: ObservableObject {
     /// Mute the microphone (stop sending audio)
     func mute() async throws {
         guard let audioTrack = audioTrack else {
+            NSLog("[LiveKit] Cannot mute: no audio track")
             return
         }
 
         try await audioTrack.mute()
         isMuted = true
-        NSLog("[LiveKit] Microphone muted")
+        NSLog("[LiveKit] Audio track '\(Self.audioTrackName)' muted")
     }
 
     /// Unmute the microphone (resume sending audio)
     func unmute() async throws {
         guard let audioTrack = audioTrack else {
+            NSLog("[LiveKit] Cannot unmute: no audio track")
             return
         }
 
         try await audioTrack.unmute()
         isMuted = false
-        NSLog("[LiveKit] Microphone unmuted")
+        NSLog("[LiveKit] Audio track '\(Self.audioTrackName)' unmuted")
     }
 
     /// Toggle mute state

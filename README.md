@@ -1,14 +1,10 @@
-# Blindsighted
+# Blindsighted (Sample App)
 
 **A hackathon-ready template for building AI-powered experiences with Ray-Ban Meta smart glasses.**
 
-This isn't meant to be a finished product. It's a starting point that handles the painful integration work so you can focus on building cool stuff.
-
-## What is this?
-
 Blindsighted is a **sample app** that connects Ray-Ban Meta smart glasses to AI agents via LiveKit. The context is for a visual assistance app for blind/visually impaired users, but the architecture works for any AI-powered glasses experience.
 
-The integration setup with Meta's wearables SDK and LiveKit streaming was genuinely painful to get right. This template gives you a working foundation so you can skip that part and jump straight to the interesting bits.
+The integration setup with Meta's wearables SDK and LiveKit streaming was finicky to get right. This template gives you a working foundation so you can skip that part and jump straight to the interesting bits.
 
 ## Architecture Overview
 
@@ -143,7 +139,7 @@ Free-for-all. Use this however you want; I'd love to be in the loop, but no pres
 I built this because:
 
 1. Getting Meta's wearables SDK working took a bit of time without being 'fun'.
-2. Originally I had custom WebRTC setup and streaming (which took a lot of time); Pentaform showed me LiveKit which seems much more suitable for a hackathon use-case, but also has it's own pain points.
+2. Originally I had custom WebRTC streaming (which took a lot of time); Pentaform showed me LiveKit which seems much more suitable for a hackathon use-case so I swapped over to that for this project, but also has it's own pain points.
 
 If this helps you build something cool, that's awesome. If you find a better way to do any of this, even better.
 

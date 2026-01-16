@@ -133,13 +133,27 @@ class LifelogSyncManager: ObservableObject {
 
     private func fetchCloudEntries() async throws -> [LifelogEntryDTO] {
         let url = URL(string: "\(apiBaseURL)/lifelog/sync/\(deviceIdentifier)")!
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, urlResponse) = try await URLSession.shared.data(from: url)
+
+        // Log HTTP response details
+        if let httpResponse = urlResponse as? HTTPURLResponse {
+            print("[Sync] HTTP Status: \(httpResponse.statusCode)")
+            print("[Sync] Response URL: \(httpResponse.url?.absoluteString ?? "unknown")")
+        }
+
+        // Log raw response for debugging
+        if let responseText = String(data: data, encoding: .utf8) {
+            print("[Sync] Raw response (\(data.count) bytes):")
+            print(responseText)
+        } else {
+            print("[Sync] Response data is not valid UTF-8 (\(data.count) bytes)")
+        }
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let response = try decoder.decode(SyncResponse.self, from: data)
+        let syncResponse = try decoder.decode(SyncResponse.self, from: data)
 
-        return response.entries
+        return syncResponse.entries
     }
 
     private func calculateLocalHashes(for videos: [RecordedVideo]) async throws -> [String: RecordedVideo] {
@@ -267,10 +281,26 @@ class LifelogSyncManager: ObservableObject {
         request.httpBody = body
 
         // Send request
-        let (responseData, response) = try await URLSession.shared.data(for: request)
+        let (responseData, urlResponse) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw URLError(.badServerResponse)
+        // Log HTTP response details
+        if let httpResponse = urlResponse as? HTTPURLResponse {
+            print("[Sync] Upload HTTP Status: \(httpResponse.statusCode)")
+
+            guard httpResponse.statusCode == 200 else {
+                // Log raw response on error
+                if let responseText = String(data: responseData, encoding: .utf8) {
+                    print("[Sync] Upload error response (\(responseData.count) bytes):")
+                    print(responseText)
+                }
+                throw URLError(.badServerResponse)
+            }
+        }
+
+        // Log raw response for debugging
+        if let responseText = String(data: responseData, encoding: .utf8) {
+            print("[Sync] Upload response (\(responseData.count) bytes):")
+            print(responseText)
         }
 
         let decoder = JSONDecoder()

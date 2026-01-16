@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run python:*)",
+      "Bash(grep:*)",
+      "Bash(sips:*)",
+      "Bash(rsvg-convert:*)"
+    ]
+  }
+}

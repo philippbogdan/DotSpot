@@ -9,6 +9,7 @@ struct LiveKitSettingsView: View {
     @State private var serverURL: String = ""
     @State private var token: String = ""
     @State private var roomName: String = ""
+    @State private var agentName: String = ""
     @State private var enableVideo: Bool = true
     @State private var showSaved: Bool = false
     @State private var showError: Bool = false
@@ -57,11 +58,7 @@ struct LiveKitSettingsView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
-                            Text("• ngrok/Cloudflare Tunnel: https://your-url.ngrok.io")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Text("• Cloud: Deploy to Railway, Fly.io, etc.")
+                            Text("• Cloud: Deploy to a cloud provider")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
@@ -134,6 +131,11 @@ struct LiveKitSettingsView: View {
             Text("Example: http://192.168.1.100:8000")
                 .font(.caption)
                 .foregroundColor(.secondary)
+
+            TextField("Agent Name", text: $agentName)
+            Text("Optional: Specify which agent to use (e.g., example_agent)")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 
@@ -146,6 +148,8 @@ struct LiveKitSettingsView: View {
             TextField("Room Name", text: $roomName)
 
             SecureField("Access Token", text: $token)
+
+            TextField("Agent Name", text: $agentName)
         }
     }
 
@@ -173,7 +177,8 @@ struct LiveKitSettingsView: View {
                 showError = true
                 return
             }
-            config = .apiMode(apiURL: apiURL, enableVideo: enableVideo)
+            let agentNameValue = agentName.isEmpty ? nil : agentName
+            config = .apiMode(apiURL: apiURL, agentName: agentNameValue, enableVideo: enableVideo)
 
         case .manual:
             // Validate LiveKit server URL format
@@ -182,10 +187,12 @@ struct LiveKitSettingsView: View {
                 showError = true
                 return
             }
+            let agentNameValue = agentName.isEmpty ? nil : agentName
             config = .manualMode(
                 serverURL: serverURL,
                 token: token,
                 roomName: roomName,
+                agentName: agentNameValue,
                 enableVideo: enableVideo
             )
         }
@@ -201,6 +208,7 @@ struct LiveKitSettingsView: View {
         serverURL = ""
         token = ""
         roomName = ""
+        agentName = ""
         enableVideo = true
     }
 
@@ -211,6 +219,7 @@ struct LiveKitSettingsView: View {
             serverURL = config.serverURL ?? ""
             token = config.token ?? ""
             roomName = config.roomName ?? ""
+            agentName = config.agentName ?? ""
             enableVideo = config.enableVideo
         }
     }

@@ -120,7 +120,7 @@ VIDEO_METADATA: dict[str, dict[str, Any]] = {
         "heading": 180.0,
     },
     "monkey_jungle_2.mp4": {
-        "days_ago": 14,
+        "days_ago": 12,
         "hour": 11,
         "minute": 20,
         "latitude": 10.7769,

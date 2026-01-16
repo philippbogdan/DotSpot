@@ -128,8 +128,8 @@ class StreamSessionViewModel: ObservableObject {
           }
         }
 
-        // Publish frame to LiveKit if connected
-        if self.isLiveKitConnected, let manager = self.liveKitManager, manager.isPublishingVideo {
+        // Publish frame to LiveKit if connected (manager handles buffering/dropping)
+        if self.isLiveKitConnected, let manager = self.liveKitManager {
           if let pixelBuffer = videoFrame.makePixelBuffer(targetSize: self.detectedVideoSize ?? CGSize(width: 1280, height: 720)) {
             // Calculate timestamp for this frame
             let timestamp = CMTime(value: CMTimeValue(self.frameCount), timescale: 24)
@@ -216,7 +216,7 @@ class StreamSessionViewModel: ObservableObject {
 
           // Generate unique device ID for this device
           let deviceId = "glasses-\(UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown")"
-          let response = try await client.startSession(deviceId: deviceId)
+          let response = try await client.startSession(deviceId: deviceId, agentId: config.agentName)
 
           credentials = LiveKitSessionCredentials(
             sessionId: response.sessionId,
@@ -246,6 +246,12 @@ class StreamSessionViewModel: ObservableObject {
         // Connect to LiveKit with credentials
         try await manager.connect(credentials: credentials, config: config)
         isLiveKitConnected = true
+
+        // Start video publishing if we've already received frames
+        if detectedVideoSize != nil {
+          NSLog("[Blindsighted] Starting LiveKit video publishing (late start after connection)")
+          startLiveKitPublishing()
+        }
       } catch {
         showError("LiveKit connection failed: \(error.localizedDescription)")
       }
@@ -367,17 +373,26 @@ class StreamSessionViewModel: ObservableObject {
 
   /// Start publishing video and audio to LiveKit after first frame
   private func startLiveKitPublishing() {
-    guard isLiveKitConnected, let manager = liveKitManager, let videoSize = detectedVideoSize else {
+    guard isLiveKitConnected else {
+      NSLog("[Blindsighted] Cannot start LiveKit publishing: not connected")
+      return
+    }
+    guard let manager = liveKitManager else {
+      NSLog("[Blindsighted] Cannot start LiveKit publishing: no manager")
+      return
+    }
+    guard let videoSize = detectedVideoSize else {
+      NSLog("[Blindsighted] Cannot start LiveKit publishing: video size not detected")
       return
     }
 
     Task {
       do {
-        // Start publishing video
+        // Set up video track (will publish after first frame is captured)
         try await manager.startPublishingVideo(videoSize: videoSize, frameRate: 24)
-        NSLog("[Blindsighted] Started LiveKit video publishing at \(videoSize.width)x\(videoSize.height)")
+        NSLog("[Blindsighted] LiveKit video track prepared at \(videoSize.width)x\(videoSize.height), will publish after first frame")
 
-        // Start publishing audio
+        // Start publishing audio (happens immediately)
         try await manager.startPublishingAudio()
         NSLog("[Blindsighted] Started LiveKit audio publishing")
       } catch {
@@ -406,7 +421,7 @@ class StreamSessionViewModel: ObservableObject {
       self.apiClient = client
 
       let deviceId = "glasses-\(UIDevice.current.identifierForVendor?.uuidString.prefix(8) ?? "unknown")"
-      let response = try await client.startSession(deviceId: deviceId)
+      let response = try await client.startSession(deviceId: deviceId, agentId: config.agentName)
 
       credentials = LiveKitSessionCredentials(
         sessionId: response.sessionId,
