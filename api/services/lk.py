@@ -1,7 +1,9 @@
 """LiveKit service for managing rooms, tokens, and egress."""
 
 import secrets
+
 from livekit import api
+
 from config import settings
 
 
@@ -33,7 +35,7 @@ class LiveKitService:
             The created Room object
         """
         lkapi = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
-        room_service = lkapi.room()
+        room_service = lkapi.room
 
         room = await room_service.create_room(
             api.CreateRoomRequest(name=room_name, metadata=agent_id or "")
@@ -85,7 +87,7 @@ class LiveKitService:
             EgressInfo object with egress details
         """
         lkapi = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
-        egress_service = lkapi.egress()
+        egress_service = lkapi.egress
 
         # Configure S3 (R2-compatible) upload
         s3_upload = api.S3Upload(
@@ -123,11 +125,9 @@ class LiveKitService:
             Updated EgressInfo object
         """
         lkapi = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
-        egress_service = lkapi.egress()
+        egress_service = lkapi.egress
 
-        egress_info = await egress_service.stop_egress(
-            api.StopEgressRequest(egress_id=egress_id)
-        )
+        egress_info = await egress_service.stop_egress(api.StopEgressRequest(egress_id=egress_id))
 
         await lkapi.aclose()
         return egress_info
@@ -139,9 +139,7 @@ class LiveKitService:
             room_name: Name of the room to delete
         """
         lkapi = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
-        room_service = lkapi.room()
+        room_service = lkapi.room
 
-        await room_service.delete_room(
-            api.DeleteRoomRequest(room=room_name)
-        )
+        await room_service.delete_room(api.DeleteRoomRequest(room=room_name))
         await lkapi.aclose()

@@ -265,6 +265,7 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   private func showError(_ message: String) {
+    NSLog("[Blindsighted] ERROR: \(message)")
     errorMessage = message
     showError = true
   }
