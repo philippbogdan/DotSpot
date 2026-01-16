@@ -1,13 +1,31 @@
 # Blindsighted API
 
-FastAPI backend for the Blindsighted app with AI-powered visual assistance.
+**Part of the Blindsighted hackathon template** - optional backend for session management and storage.
 
-## Features
+This FastAPI backend handles LiveKit room creation, token generation, session management, and R2 storage for life logs. It's useful but not required - you can run the iOS app and agents without it if you manage LiveKit credentials yourself.
 
-- **Frame Processing**: Receives video frames from Meta AI Glasses
-- **AI Vision**: Uses Gemini (via OpenRouter) to describe scenes
-- **Text-to-Speech**: Converts descriptions to audio for blind/visually impaired users
-- **Real-time Streaming**: Processes frames at configurable FPS
+## What This Component Does
+
+- Creates LiveKit rooms and generates access tokens for iOS app
+- Manages session lifecycle (start, stop, metadata)
+- Stores session data and conversation segments to database
+- Uploads life logs and replays to R2 storage (Cloudflare object storage)
+- Provides REST API for session history and replay
+
+**See [../ARCHITECTURE.md](../ARCHITECTURE.md) for how this fits into the overall system.**
+
+## When You Need This
+
+- You want automatic LiveKit token generation for iOS
+- You want to store session history and metadata
+- You want to upload/replay life logs
+- You need ad hoc backend features (auth, analytics, etc.)
+
+## When You Don't Need This
+
+- You're testing agents with hardcoded LiveKit tokens
+- You just want to experiment with the glasses SDK
+- You have your own backend infrastructure
 
 ## Setup
 

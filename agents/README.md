@@ -1,26 +1,42 @@
 # Blindsighted Agents
 
-Self-contained LiveKit agents for vision-based AI assistance. Users can customize these agents with their own AI models and logic.
+**Part of the Blindsighted hackathon template** - this is where you build your AI features.
+
+These are self-contained LiveKit agents that process video/audio streams from Ray-Ban Meta glasses. The example agent does vision-based assistance, but you can customize these agents to do anything you want.
+
+## What This Component Does
+
+- Joins LiveKit rooms as peers (alongside the iOS app)
+- Receives video/audio streams from iOS app via LiveKit
+- Processes through AI models (STT → LLM → TTS pipeline)
+- Publishes audio/data responses back to iOS app
+- Can optionally log conversation turns to backend API
+
+**This is the most important part** - all your AI logic goes here. The iOS app and backend are just plumbing to get data to/from your agents.
+
+**See [../ARCHITECTURE.md](../ARCHITECTURE.md) for how this fits into the overall system.**
 
 ## Architecture
 
-This directory contains **self-contained agents** that are separate from the API:
+Agents are **completely independent** from the API backend:
 
-- **`api/`** - Infrastructure (room management, tokens, database)
-- **`agents/`** - Custom AI logic (STT, LLM, TTS, vision processing)
+- **`api/`** - Infrastructure (room management, tokens, database) - _optional_
+- **`agents/`** - Custom AI logic (STT, LLM, TTS, vision processing) - _this is where you innovate_
 
-Users can run the API once and deploy multiple different agent workers with custom configurations.
+You can run agents without the backend API. Just get LiveKit credentials and you're good to go.
 
 ## Vision Agent
 
 The vision agent uses a streaming STT-LLM-TTS pipeline with video frame analysis:
 
 **Pipeline:**
+
 1. **STT** (Deepgram) - Converts user speech to text
-2. **LLM** (Gemini 2.0 Flash) - Processes text + video frames, generates responses
+2. **LLM** (Gemini 2.5 Flash) - Processes text + video frames, generates responses
 3. **TTS** (ElevenLabs) - Converts responses to natural speech
 
 **Vision Integration:**
+
 - Buffers the latest video frame from user's camera
 - Attaches frame to each conversation turn
 - LLM can see what the user sees and describe the environment
@@ -43,11 +59,12 @@ cp .env.example .env
 ```
 
 Required configuration:
+
 - **LiveKit** - Already configured (from API setup)
   - `LIVEKIT_API_KEY` - Your LiveKit API key
   - `LIVEKIT_API_SECRET` - Your LiveKit API secret
   - `LIVEKIT_URL` - Your LiveKit server URL (e.g., `wss://your-project.livekit.cloud`)
-  - `LIVEKIT_AGENT_NAME` - Agent identifier for filtering (e.g., `vision-agent`)
+  - `LIVEKIT_AGENT_NAME` - Agent identifier for filtering so people can re-use the same livekit project (e.g., `vision-agent`)
 - **OpenRouter** - Get from https://openrouter.ai/
   - `OPENROUTER_API_KEY` - For Gemini vision model access
 - **ElevenLabs** - Get from https://elevenlabs.io/
@@ -67,6 +84,7 @@ uv run python vision_agent.py start
 ```
 
 The agent will:
+
 1. Connect to LiveKit Cloud
 2. Wait for rooms to be created (via API `/sessions/start`)
 3. Join rooms as a participant
@@ -80,6 +98,7 @@ The agent will:
 Copy `vision_agent.py` and modify:
 
 **Change the AI models:**
+
 ```python
 session = AgentSession(
     stt="assemblyai/universal-streaming",  # Different STT
@@ -90,6 +109,7 @@ session = AgentSession(
 ```
 
 **Customize instructions:**
+
 ```python
 class CustomAssistant(Agent):
     def __init__(self) -> None:
@@ -100,6 +120,7 @@ class CustomAssistant(Agent):
 ```
 
 **Add custom logic:**
+
 ```python
 async def on_user_turn_completed(self, chat_ctx, new_message):
     # Custom processing before LLM
@@ -109,6 +130,7 @@ async def on_user_turn_completed(self, chat_ctx, new_message):
 ```
 
 **Add agent filtering:**
+
 ```python
 import os
 
@@ -130,17 +152,20 @@ async def my_custom_agent(ctx: JobContext) -> None:
 ### Supported Models
 
 **STT (Speech-to-Text):**
+
 - `deepgram/nova-2` - Fast, accurate
 - `assemblyai/universal-streaming` - Multilingual
 - See [LiveKit STT docs](https://docs.livekit.io/agents/models/stt/)
 
 **LLM (Language Models):**
+
 - `google/gemini-2.0-flash-exp:free` - Vision support via OpenRouter
 - `openai/gpt-4o` - OpenAI multimodal
 - `anthropic/claude-sonnet-4.5` - Anthropic via OpenRouter
 - See [LiveKit LLM docs](https://docs.livekit.io/agents/models/llm/)
 
 **TTS (Text-to-Speech):**
+
 - `elevenlabs` - Natural, expressive voices
 - `cartesia/sonic-3` - Fast, low latency
 - `openai/tts-1` - OpenAI voices
@@ -229,11 +254,13 @@ This allows experimenting with different models on the same conversation.
 ## Deployment
 
 ### Development
+
 ```bash
 uv run python vision_agent.py dev
 ```
 
 ### Production
+
 ```bash
 # Run as a service
 uv run python vision_agent.py start
@@ -258,6 +285,7 @@ Each agent worker can handle multiple rooms concurrently. See the [Agent Filteri
 ## Troubleshooting
 
 **Agent not joining rooms:**
+
 - Check LiveKit credentials in `.env`
 - Verify agent can connect: `uv run python vision_agent.py dev`
 - Check LiveKit Cloud dashboard for connected agents
@@ -265,16 +293,19 @@ Each agent worker can handle multiple rooms concurrently. See the [Agent Filteri
 - Check agent logs for "Rejecting job" messages indicating a mismatch
 
 **No video frames:**
+
 - Ensure user grants camera permission in iOS app
 - Check video track is published: LiveKit dashboard > Room > Tracks
 - Verify agent subscribed: Check logs for "Subscribed to existing video track"
 
 **TTS not working:**
+
 - Verify ElevenLabs API key in `.env`
 - Check API quota/limits
 - Try different TTS provider (Cartesia, OpenAI)
 
 **LLM errors:**
+
 - Verify OpenRouter API key for Gemini
 - Check model name is correct
 - Try different model (GPT-4, Claude)

@@ -4,13 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Blindsighted is a mobile app with FastAPI backend that provides AI-powered visual assistance for blind/visually impaired users using Meta AI Glasses (Ray-Ban Meta).
+Blindsighted is a **hackathon template** for building AI-powered experiences with Ray-Ban Meta smart glasses. Originally built as a vision assistance app for blind/visually impaired users, the architecture works for any AI-powered glasses application.
 
-**Architecture**: Monorepo with two main components:
+**Architecture**: Monorepo with three independent components:
 
 - `ios/` - Native iOS app (Swift/SwiftUI) using Meta Wearables DAT SDK for Ray-Ban Meta glasses
-- `api/` - FastAPI backend (Python 3.11) that processes metadata + session management
-- `agents/` - LiveKit agents (Python 3.11) that process live video/audio streams and perform the ai processing.
+- `api/` - FastAPI backend (Python 3.11) for session management, room creation, R2 storage for life logs/replays
+- `agents/` - LiveKit agents (Python 3.11) that process live video/audio streams and perform AI processing
+
+**See [ARCHITECTURE.md](../ARCHITECTURE.md) for detailed system architecture, data flow, and modular usage patterns.**
+
+## Quick Architecture Summary
+
+```
+┌──────────────┐
+│   iOS App    │
+│   (Swift)    │
+│              │
+│  - Meta SDK  │
+│  - Camera    │
+│  - Audio     │
+└───────┬──────┘
+        │
+        ├──── WebRTC ─────────┐
+        │                     │
+        │ HTTP/REST           ▼
+        │              ┌──────────────────┐
+        ▼              │  LiveKit Cloud   │
+┌────────────┐         │  (WebRTC Hub)    │
+│  FastAPI   │         │                  │
+│  Backend   │         │  Rooms/Sessions  │
+│            │         └────────┬─────────┘
+│ - Sessions │                  │
+│ - Tokens   │                  │ WebRTC (peer)
+│ - R2       │                  │
+└────────────┘          ┌───────▼────────┐
+                        │    Agents      │
+                        │   (Python)     │
+                        │                │
+                        │ - Join peers   │
+                        │ - AI models    │
+                        │ - Audio out    │
+                        └────────────────┘
+```
+
+**You can use just parts of this:**
+- iOS only (dev mode with hardcoded tokens)
+- iOS + Agents (skip backend, use LiveKit dashboard)
+- Full stack (all three components)
+
+See [ARCHITECTURE.md](../ARCHITECTURE.md) for detailed information on modular usage patterns, data flow, and customization options.
 
 ## Development Commands
 

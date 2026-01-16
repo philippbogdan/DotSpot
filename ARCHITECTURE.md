@@ -2,47 +2,75 @@
 
 ## Overview
 
-Blindsighted is a real-time vision assistance system for visually impaired users, combining LiveKit WebRTC infrastructure with AI-powered scene description.
+Blindsighted is a **hackathon template** for building AI-powered experiences with Ray-Ban Meta smart glasses. Originally built as a vision assistance system for visually impaired users, the architecture works for any AI-powered glasses application.
+
+This document describes how all the pieces fit together. Use what you need, modify what you want, or throw it all away if you have a better approach.
 
 ## System Components
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         iOS App (Swift)                          │
-│  - Meta Ray-Ban Glasses Integration                             │
-│  - LiveKit Client (WebRTC)                                       │
-│  - Camera/Audio Streaming                                        │
-└────────────┬────────────────────────────────────────────────────┘
-             │
-             │ WebRTC
-             │
-┌────────────▼────────────────────────────────────────────────────┐
-│                    LiveKit Cloud (SFU)                           │
-│  - WebRTC Signaling & Media Routing                             │
-│  - Room Management                                               │
-│  - Track Publishing/Subscribing                                  │
-└────────┬────────────────────────────────────┬───────────────────┘
-         │                                    │
-         │ REST API                           │ Agent Protocol
-         │                                    │
-┌────────▼─────────────┐            ┌────────▼──────────────────┐
-│   FastAPI Backend    │            │   LiveKit Agents          │
-│   (api/)             │            │   (agents/)               │
-│                      │            │                           │
-│ - Session Management │            │ STT-LLM-TTS Pipeline:     │
-│ - Room Creation      │            │  - Deepgram (STT)         │
-│ - Token Generation   │            │  - Gemini 2.0 (LLM+Vision)│
-│ - Database (Postgres)│            │  - ElevenLabs (TTS)       │
-│ - R2 Storage         │            │                           │
-│ - Agent Metadata     │            │ - Video Frame Buffering   │
-└──────────────────────┘            │ - Turn-based Description  │
-                                    │ - Self-contained Config   │
-                                    └───────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│           iOS App (Swift)                        │
+│  - Meta Ray-Ban Glasses Integration             │
+│  - LiveKit Client (WebRTC)                       │
+│  - Camera/Audio Streaming                        │
+└────────────┬───────────────────┬─────────────────┘
+             │                   │
+             │ WebRTC            │ HTTP/REST
+             │                   │
+             │                   ▼
+             │          ┌─────────────────────────┐
+             │          │   FastAPI Backend       │
+             │          │   (api/)                │
+             │          │                         │
+             │          │ - Session Management    │
+             │          │ - Room Creation         │
+             │          │ - Token Generation      │
+             │          │ - Database (Postgres)   │
+             │          │ - R2 Storage            │
+             │          │ - Agent Metadata        │
+             │          └───────────┬─────────────┘
+             │                      │
+             │                      │ HTTP/REST
+             │                      │ (optional)
+             ▼                      ▼
+┌─────────────────────────────────────────────────┐
+│          LiveKit Cloud (WebRTC Hub)             │
+│  - WebRTC Signaling & Media Routing             │
+│  - Room Management                              │
+│  - Track Publishing/Subscribing                 │
+│  - Peer-to-peer routing                         │
+└────────────────────┬────────────────────────────┘
+                     │
+                     │ WebRTC (peer)
+                     │
+            ┌────────▼────────────────────┐
+            │   LiveKit Agents            │
+            │   (agents/)                 │
+            │                             │
+            │ STT-LLM-TTS Pipeline:       │
+            │  - Deepgram (STT)           │
+            │  - Gemini 2.0 (LLM+Vision)  │
+            │  - ElevenLabs (TTS)         │
+            │                             │
+            │ - Join as peers             │
+            │ - Video Frame Buffering     │
+            │ - Turn-based Description    │
+            │ - Self-contained Config     │
+            └─────────────────────────────┘
 ```
+
+**Key Connections:**
+
+- **iOS → LiveKit Cloud**: WebRTC for low-latency audio/video streaming
+- **iOS → FastAPI Backend**: HTTP/REST for session creation and token generation
+- **Agents → LiveKit Cloud**: WebRTC as peers for receiving/sending media
+- **Agents → FastAPI Backend**: HTTP/REST for logging segments (optional)
 
 ## Data Flow
 
 ### 1. Session Initialization
+
 ```
 iOS App
   │
@@ -55,6 +83,7 @@ iOS App
 ```
 
 ### 2. Agent Join & Vision Pipeline
+
 ```
 LiveKit Cloud
   │
@@ -75,13 +104,14 @@ LiveKit Cloud
 ```
 
 ### 3. Conversation Flow
+
 ```
 User: "What do you see?"
   │
   ├─> [Video Frame: Kitchen scene]
   │
   ├─> Gemini analyzes frame + text
-  │   └─> "I can see a modern kitchen with 
+  │   └─> "I can see a modern kitchen with
   │        stainless steel appliances..."
   │
   └─> ElevenLabs converts to speech
@@ -93,31 +123,85 @@ User: "What do you see?"
 ### Separation of Concerns
 
 **API (api/)** - Infrastructure Layer
+
 - Room lifecycle management
-- Authentication & authorization
+- Authentication & authorization (TODO)
 - Session persistence (Postgres)
 - Recording storage (R2)
 - Exposes REST endpoints
 - **Does not contain AI logic**
+- **Optional** - agents can work without it; you just need to hardcode your LiveKit token in the iOS app
 
 **Agents (agents/)** - AI Logic Layer
+
 - Self-contained AI workers
 - STT-LLM-TTS pipeline configuration
 - Video frame processing
 - Custom instructions & behavior
 - **Independent deployment**
-- **User-customizable**
+- **Completely customizable**
+
+**iOS App (ios/)** - Client Layer
+
+- Interface to Ray-Ban Meta glasses
+- LiveKit streaming client
+- Audio routing to glasses speakers
+- **Works standalone** in dev mode
+
+### Modular Usage Patterns
+
+You don't need all three components. Pick what you need:
+
+**Pattern 1: Just iOS (Testing)**
+
+```
+iOS App → LiveKit Cloud
+```
+
+Use hardcoded LiveKit token in `Config.xcconfig`. Good for testing Meta SDK integration without running backend or agents.
+
+**Pattern 2: iOS + Agents (Minimal)**
+
+```
+iOS App → LiveKit Cloud ← Agents
+```
+
+Skip the backend API. Manually create rooms via LiveKit dashboard, generate tokens for iOS, agents auto-join all rooms.
+
+**Pattern 3: Full Stack (Production)**
+
+```
+iOS App → LiveKit Cloud ← Agents
+    ↓            ↑             ↓
+    └──→ FastAPI Backend ←────┘
+```
+
+Use everything. Backend manages sessions, agents filter by agent name, life logs stored to R2.
+
+**Pattern 4: Backend + Agents (No iOS)**
+
+```
+Backend API → LiveKit Cloud ← Agents
+```
+
+Test agent logic with recorded videos. Replay stored life logs through different agents.
 
 ### Agent Customization
 
-Users can:
-1. Copy `vision_agent.py`
-2. Modify AI models (different LLM, TTS, STT)
-3. Change instructions/behavior
-4. Add custom processing logic
-5. Deploy multiple agents with different configurations
+This is where you make it yours. Copy `example_agent.py` and modify:
 
-Example custom agent:
+**Different AI models:**
+
+```python
+session = AgentSession(
+    stt="assemblyai/universal-streaming",  # Different STT
+    llm=openai.LLM(model="gpt-4o"),        # Different LLM
+    tts="cartesia/sonic-3",                 # Different TTS
+)
+```
+
+**Custom instructions:**
+
 ```python
 # agents/spanish_agent.py
 session = AgentSession(
@@ -127,9 +211,19 @@ session = AgentSession(
 )
 ```
 
+**Add custom logic:**
+
+```python
+async def on_user_turn_completed(self, chat_ctx, new_message):
+    # Process frame, add metadata, custom behavior
+    if self._latest_frame:
+        new_message.content.append(llm.ChatImage(image=self._latest_frame))
+```
+
 ### Agent Prefix System
 
 **Session Creation:**
+
 ```json
 POST /sessions/start
 {
@@ -139,6 +233,7 @@ POST /sessions/start
 ```
 
 **Database:**
+
 ```sql
 stream_sessions (
   id, room_name, agent_id,  -- Agent identifier
@@ -147,6 +242,7 @@ stream_sessions (
 ```
 
 **Use Cases:**
+
 - A/B testing different AI models
 - User preference (fast vs. detailed)
 - Feature flags (experimental features)
@@ -155,6 +251,7 @@ stream_sessions (
 ### Replay System
 
 **Segments Table:**
+
 ```sql
 segments (
   session_id, turn_number,
@@ -167,6 +264,7 @@ segments (
 ```
 
 **Replay Flow:**
+
 1. Record conversation as segments
 2. Store video frames + transcripts
 3. Replay segments with different agent
@@ -176,6 +274,7 @@ segments (
 ## Technology Stack
 
 ### iOS App
+
 - **Language:** Swift 6.2
 - **UI:** SwiftUI
 - **SDK:** Meta Wearables DAT SDK 0.3.0
@@ -183,6 +282,7 @@ segments (
 - **Target:** iOS 17.0+
 
 ### Backend API
+
 - **Runtime:** Python 3.11+
 - **Framework:** FastAPI 0.115.6
 - **Database:** PostgreSQL (async via psycopg)
@@ -191,6 +291,7 @@ segments (
 - **Logging:** Loguru
 
 ### LiveKit Agents
+
 - **Framework:** LiveKit Agents 0.12.3
 - **STT:** Deepgram Nova 2
 - **LLM:** Gemini 2.0 Flash (via OpenRouter)
@@ -199,6 +300,7 @@ segments (
 - **Vision:** Video frame buffering + multimodal LLM
 
 ### Infrastructure
+
 - **WebRTC:** LiveKit Cloud (wss://blindsighted-iogq73td.livekit.cloud)
 - **Database:** PostgreSQL on bonbon (65.109.34.215)
 - **Storage:** Cloudflare R2 (cdn.blindsighted.hails.info)
@@ -209,12 +311,14 @@ segments (
 ### Room Lifecycle
 
 **Create Room:**
+
 ```python
 # api/services/lk.py
 room = await livekit.create_room(room_name)
 ```
 
 **Generate Token:**
+
 ```python
 token = livekit.create_access_token(
     room_name=room_name,
@@ -223,6 +327,7 @@ token = livekit.create_access_token(
 ```
 
 **Start Egress (Recording):**
+
 ```python
 egress = await livekit.start_room_composite_egress(
     room_name=room_name,
@@ -233,6 +338,7 @@ egress = await livekit.start_room_composite_egress(
 ### Agent Connection
 
 **Agent Server:**
+
 ```python
 # agents/vision_agent.py
 server = AgentServer()
@@ -244,6 +350,7 @@ async def vision_agent(ctx: JobContext):
 ```
 
 **Automatic Scaling:**
+
 - Agents connect to LiveKit Cloud
 - LiveKit routes rooms to available agents
 - Multiple agents can run concurrently
@@ -252,6 +359,7 @@ async def vision_agent(ctx: JobContext):
 ### Video Processing
 
 **Frame Buffering:**
+
 ```python
 class VisionAssistant(Agent):
     async def on_enter(self):
@@ -259,7 +367,7 @@ class VisionAssistant(Agent):
         self._video_stream = rtc.VideoStream(track)
         async for event in self._video_stream:
             self._latest_frame = event.frame  # Buffer latest
-    
+
     async def on_user_turn_completed(self, ctx, message):
         # Attach frame to user message
         if self._latest_frame:
@@ -267,6 +375,7 @@ class VisionAssistant(Agent):
 ```
 
 **Frame Rate:**
+
 - iOS publishes at 30fps
 - Agent buffers latest frame only
 - Frame attached once per conversation turn
@@ -275,18 +384,21 @@ class VisionAssistant(Agent):
 ## Database Schema
 
 ### stream_sessions
+
 - Room metadata
 - Agent configuration (`agent_id`)
 - Session lifecycle (created, started, ended)
 - User/device tracking
 
 ### recordings
+
 - R2 storage references
 - Egress metadata
 - Duration, file size
 - Recording status
 
 ### segments
+
 - Conversation turns
 - Timestamps per turn
 - Frame/audio counts
@@ -295,17 +407,20 @@ class VisionAssistant(Agent):
 ## Security Considerations
 
 ### Agent Prefix
+
 - **Not secure by design**
 - Anyone can use any `agent_id`
 - Agents trust room metadata
 - Use for experimentation, not authorization
 
 ### API Authentication
+
 - TODO: Add JWT tokens
 - TODO: User authentication
 - TODO: Rate limiting
 
 ### LiveKit Tokens
+
 - Short-lived (1 hour default)
 - Room-specific
 - Participant-specific
@@ -314,6 +429,7 @@ class VisionAssistant(Agent):
 ## Deployment
 
 ### API
+
 ```bash
 cd api
 docker build -t blindsighted-api .
@@ -321,6 +437,7 @@ docker run -p 8000:8000 --env-file .env blindsighted-api
 ```
 
 ### Agents
+
 ```bash
 cd agents
 uv pip install -e .
@@ -330,6 +447,7 @@ uv run python vision_agent.py start
 ### Environment Variables
 
 **API (.env):**
+
 - `DATABASE_URL` - Postgres connection
 - `LIVEKIT_*` - LiveKit credentials
 - `R2_*` - Cloudflare R2 credentials
@@ -337,6 +455,7 @@ uv run python vision_agent.py start
 - `ELEVENLABS_API_KEY` - For REST endpoint
 
 **Agents (.env):**
+
 - `LIVEKIT_*` - LiveKit credentials
 - `OPENROUTER_API_KEY` - For Gemini LLM
 - `ELEVENLABS_API_KEY` - For TTS
@@ -345,6 +464,7 @@ uv run python vision_agent.py start
 ## Future Enhancements
 
 ### Planned
+
 - [ ] Segment recording for replay
 - [ ] Multi-agent routing by `agent_id`
 - [ ] Conversation history UI
@@ -352,6 +472,7 @@ uv run python vision_agent.py start
 - [ ] Alternative AI models (GPT-4V, Claude with vision)
 
 ### Experimental
+
 - [ ] Gemini Live API (native streaming)
 - [ ] Continuous video analysis (not just on turns)
 - [ ] Object tracking across frames

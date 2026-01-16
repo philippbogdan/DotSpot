@@ -1,10 +1,22 @@
 # Blindsighted iOS App
 
-A native iOS application providing AI-powered visual assistance for blind/visually impaired users using Ray-Ban Meta smart glasses. This app uses the Meta Wearables Device Access Toolkit to stream live video, record sessions, and capture photos from the glasses.
+**Part of the Blindsighted hackathon template** - a starting point for building AI-powered experiences with Ray-Ban Meta smart glasses.
+
+This iOS app handles the integration with Meta's wearables SDK and LiveKit streaming. It was originally built for visual assistance, but the architecture works for any AI-powered glasses application. Use it as-is, customize it, or use it as a reference for your own implementation.
+
+## What This Component Does
+
+- Connects to Ray-Ban Meta smart glasses via Bluetooth
+- Streams video/audio from glasses to LiveKit Cloud (WebRTC)
+- Receives audio responses from AI agents and routes to glasses speakers
+- Calls FastAPI backend to create sessions and get LiveKit tokens (optional - can use dev mode)
+- Records and manages video/photo gallery locally
+
+**See [../ARCHITECTURE.md](../ARCHITECTURE.md) for how this fits into the overall system.**
 
 ## Attribution
 
-This app is based on the [CameraAccess sample](https://github.com/facebook/meta-wearables-dat-ios/tree/main/samples/CameraAccess) from Meta's [meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios) repository. The sample code has been customized and extended for the Blindsighted project.
+Based on the [CameraAccess sample](https://github.com/facebook/meta-wearables-dat-ios/tree/main/samples/CameraAccess) from Meta's [meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios) repository. Significantly extended with LiveKit integration, audio routing, and session management.
 
 ## Features
 
