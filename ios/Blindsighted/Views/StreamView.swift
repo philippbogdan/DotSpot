@@ -34,8 +34,53 @@ struct StreamView: View {
           .foregroundColor(.white)
       }
 
-      // Bottom controls layer
+      // Top-left: Recording indicator
+      if viewModel.isStreaming {
+        VStack {
+          HStack {
+            HStack(spacing: 6) {
+              Circle()
+                .fill(Color.red)
+                .frame(width: 12, height: 12)
+              Text(viewModel.recordingDuration.formattedDuration)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.5))
+            .cornerRadius(16)
+            Spacer()
+          }
+          Spacer()
+        }
+        .padding(.all, 24)
+      }
 
+      // Top-right: LiveKit connection indicator
+      if viewModel.isLiveKitConnected {
+        VStack {
+          HStack {
+            Spacer()
+            HStack(spacing: 6) {
+              Circle()
+                .fill(Color.green)
+                .frame(width: 12, height: 12)
+              Text("LIVE")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.5))
+            .cornerRadius(16)
+          }
+          Spacer()
+        }
+        .padding(.all, 24)
+      }
+
+      // Bottom controls layer
       VStack {
         Spacer()
         ControlsView(viewModel: viewModel)
@@ -58,54 +103,32 @@ struct StreamView: View {
 struct ControlsView: View {
   @ObservedObject var viewModel: StreamSessionViewModel
   var body: some View {
-    VStack(spacing: 12) {
-      // LiveKit connection indicator
+    // Controls row
+    HStack(spacing: 8) {
+      CustomButton(
+        title: "Stop recording",
+        style: .destructive,
+        isDisabled: false
+      ) {
+        Task {
+          await viewModel.stopSession()
+        }
+      }
+
+      // Photo button
+      CircleButton(icon: "camera.fill", text: nil) {
+        viewModel.capturePhoto()
+      }
+
+      // Mute button - only show when LiveKit is connected
       if viewModel.isLiveKitConnected {
-        HStack(spacing: 6) {
-          Circle()
-            .fill(Color.green)
-            .frame(width: 12, height: 12)
-          Text("LIVE")
-            .font(.system(size: 14, weight: .bold))
-            .foregroundColor(.white)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Color.black.opacity(0.5))
-        .cornerRadius(16)
-      }
-
-      // Recording duration indicator - always show when streaming
-      if viewModel.isStreaming {
-        HStack(spacing: 6) {
-          Circle()
-            .fill(Color.red)
-            .frame(width: 12, height: 12)
-          Text(viewModel.recordingDuration.formattedDuration)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundColor(.white)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Color.black.opacity(0.5))
-        .cornerRadius(16)
-      }
-
-      // Controls row
-      HStack(spacing: 8) {
-        CustomButton(
-          title: "Stop recording",
-          style: .destructive,
-          isDisabled: false
+        CircleButton(
+          icon: viewModel.isMicrophoneMuted ? "mic.slash.fill" : "mic.fill",
+          text: nil
         ) {
           Task {
-            await viewModel.stopSession()
+            await viewModel.toggleMicrophone()
           }
-        }
-
-        // Photo button
-        CircleButton(icon: "camera.fill", text: nil) {
-          viewModel.capturePhoto()
         }
       }
     }

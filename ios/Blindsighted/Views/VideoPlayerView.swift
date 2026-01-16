@@ -40,6 +40,24 @@ struct VideoPlayerView: View {
           .tint(.white)
       }
 
+      // Center play/pause button
+      Button(action: {
+        if isPaused {
+          player?.play()
+        } else {
+          player?.pause()
+        }
+      }) {
+        Image(systemName: isPaused ? "play.fill" : "pause.fill")
+          .font(.system(size: 50))
+          .foregroundColor(.white)
+          .frame(width: 80, height: 80)
+          .background(.ultraThinMaterial)
+          .clipShape(Circle())
+          .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+      }
+      .opacity(showControls ? 1 : 0)
+
       // Custom overlay controls
       VStack {
         // Top controls - close and share buttons
@@ -132,29 +150,6 @@ struct VideoPlayerView: View {
               .monospacedDigit()
           }
           .padding(.top, 4)
-
-          // Play/Pause button
-          HStack {
-            Spacer()
-
-            Button(action: {
-              if isPaused {
-                player?.play()
-              } else {
-                player?.pause()
-              }
-            }) {
-              Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                .font(.title2)
-                .foregroundColor(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.white.opacity(0.2))
-                .clipShape(Circle())
-            }
-
-            Spacer()
-          }
-          .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()

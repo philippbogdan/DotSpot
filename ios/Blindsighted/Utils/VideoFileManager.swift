@@ -142,7 +142,7 @@ class VideoFileManager: VideoFileManagerProtocol {
       return RecordedVideo(
         id: UUID(),
         filename: url.lastPathComponent,
-        recordedAt: creationDate,
+        recordedAt: metadata?.timestamp ?? creationDate,
         duration: duration,
         fileSize: fileSize,
         metadata: metadata

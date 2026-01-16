@@ -45,6 +45,7 @@ class StreamSessionViewModel: ObservableObject {
 
   // LiveKit streaming properties
   @Published var isLiveKitConnected: Bool = false
+  @Published var isMicrophoneMuted: Bool = false
   private var liveKitManager: LiveKitManager?
   private var liveKitConfig: LiveKitConfig?
   private var liveKitSessionId: Int?  // Track session ID for cleanup
@@ -431,6 +432,7 @@ class StreamSessionViewModel: ObservableObject {
 
     try await manager.connect(credentials: credentials, config: config)
     isLiveKitConnected = true
+    isMicrophoneMuted = manager.isMuted  // Sync mute state
   }
 
   /// Manually disconnect from LiveKit (can be called from UI)
@@ -459,6 +461,22 @@ class StreamSessionViewModel: ObservableObject {
     self.liveKitConfig = config
     if liveKitManager == nil {
       liveKitManager = LiveKitManager()
+    }
+  }
+
+  /// Toggle microphone mute state
+  func toggleMicrophone() async {
+    guard let manager = liveKitManager, isLiveKitConnected else {
+      NSLog("[Blindsighted] Cannot toggle microphone: not connected to LiveKit")
+      return
+    }
+
+    do {
+      try await manager.toggleMute()
+      self.isMicrophoneMuted = manager.isMuted
+      NSLog("[Blindsighted] Microphone \(manager.isMuted ? "muted" : "unmuted")")
+    } catch {
+      NSLog("[Blindsighted] Failed to toggle microphone: \(error)")
     }
   }
 

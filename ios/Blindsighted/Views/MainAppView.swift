@@ -41,8 +41,8 @@ struct MainAppView: View {
           .tag(2)
       }
       .task {
-        // Seed preview videos on first launch (DEBUG mode only)
-        await PreviewVideoSeeder.shared.seedVideosIfNeeded()
+        // Sync lifelog with cloud on app launch
+        await LifelogSyncManager.shared.sync()
       }
     } else {
       // User not registered - show registration/onboarding flow

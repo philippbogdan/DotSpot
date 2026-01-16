@@ -32,10 +32,11 @@ class PreviewVideoSeeder {
 
     private init() {
         // Get API base URL from Info.plist
-        if let url = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String {
+        if let apiConfig = Bundle.main.object(forInfoDictionaryKey: "APIConfig") as? [String: String],
+           let url = apiConfig["BaseURL"] {
             self.apiBaseURL = url
         } else {
-            self.apiBaseURL = "http://localhost:8000"
+            self.apiBaseURL = "https://api.blindsighted.hails.info"
         }
     }
 
