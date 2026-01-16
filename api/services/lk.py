@@ -22,11 +22,12 @@ class LiveKitService:
         """
         return f"blindsighted-{secrets.token_urlsafe(16)}"
 
-    async def create_room(self, room_name: str) -> api.Room:
+    async def create_room(self, room_name: str, agent_id: str | None = None) -> api.Room:
         """Create a new LiveKit room.
 
         Args:
             room_name: Name of the room to create
+            agent_id: Optional agent identifier to store in room metadata
 
         Returns:
             The created Room object
@@ -35,7 +36,7 @@ class LiveKitService:
         room_service = lkapi.room()
 
         room = await room_service.create_room(
-            api.CreateRoomRequest(name=room_name)
+            api.CreateRoomRequest(name=room_name, metadata=agent_id or "")
         )
         await lkapi.aclose()
         return room

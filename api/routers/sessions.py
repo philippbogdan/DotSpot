@@ -57,8 +57,8 @@ async def start_session(
         # Generate unique room name
         room_name = livekit.generate_room_name()
 
-        # Create LiveKit room
-        room = await livekit.create_room(room_name)
+        # Create LiveKit room with agent_id in metadata
+        room = await livekit.create_room(room_name, agent_id=request.agent_id)
 
         # Create database session record
         session = StreamSession(

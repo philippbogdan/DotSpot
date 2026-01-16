@@ -116,7 +116,31 @@ class VisionAssistant(Agent):
 server = AgentServer()
 
 
-@server.rtc_session()
+def should_accept_job(job_request) -> bool:
+    """Filter function to accept only jobs matching this agent's name.
+
+    The agent name is configured via LIVEKIT_AGENT_NAME environment variable
+    and should match the agent_id stored in the room metadata by the API.
+    """
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "vision-agent")
+    room_metadata = job_request.room.metadata
+
+    # If no agent name is configured in the room metadata, accept all jobs (backward compatibility)
+    if not room_metadata:
+        logger.warning(f"Room {job_request.room.name} has no metadata - accepting job for backward compatibility")
+        return True
+
+    # Accept job if room metadata matches our agent name
+    should_accept = room_metadata == agent_name
+    if should_accept:
+        logger.info(f"Accepting job for room {job_request.room.name} (agent: {agent_name})")
+    else:
+        logger.info(f"Rejecting job for room {job_request.room.name} (expected: {agent_name}, got: {room_metadata})")
+
+    return should_accept
+
+
+@server.rtc_session(request_fnc=should_accept_job)
 async def vision_agent(ctx: JobContext) -> None:
     """Entry point for the vision assistant agent.
 
@@ -164,5 +188,6 @@ async def vision_agent(ctx: JobContext) -> None:
 
 
 if __name__ == "__main__":
+    logger.info("Starting vision agent worker")
     # Run the agent worker
     cli.run_app(server)
