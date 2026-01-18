@@ -10,10 +10,32 @@
 .env*
 !.env*.example
 
-# # Old expo
-# .expo/
-
 # uv
 .uv/
 # Agent environment variables
 agents/.env
+
+# Python virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Large video files
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# ML model weights
+*.pt
+*.pth
+*.onnx
+*.mlpackage/
+
+# iOS build artifacts
+ios/DerivedData/
+*.xcuserstate
+
+# Server models
+server/yolov8*.pt
