@@ -3,16 +3,30 @@ https://private-user-images.githubusercontent.com/174341097/537279439-fed16046-7
 
 # DotSpot
 
-Point at objects with Ray-Ban Meta glasses to identify them using YOLOv8.
+**An assistive tool for blind and visually impaired people.**
+
+Point your head at something. The glasses tell you what it is.
+
+---
+
+## Why This Exists
+
+Blind people constantly ask "what's in front of me?" — at the grocery store, in a new room, on a desk. Current solutions require pulling out a phone, opening an app, pointing a camera. Too slow. Too awkward.
+
+DotSpot uses Ray-Ban Meta smart glasses to identify objects hands-free. Just look at something for 2 seconds. The glasses speak the object name directly into your ears.
+
+No phone in hand. No screen to look at. Just point and listen.
+
+---
 
 ## How It Works
 
 1. Wear Ray-Ban Meta glasses connected to the iOS app
-2. Enable **DotSpot** mode - a red pointer appears on screen
-3. Point at any object for 2 seconds
-4. The glasses speak the object name via TTS
+2. Point your head at any object for 2 seconds
+3. A fading hum tells you the system is tracking
+4. Chime plays → glasses speak the object name
 
-Detection runs on your laptop (YOLOv8m) via WebSocket for better accuracy.
+The system remembers what it already told you — look away and back, it won't repeat itself.
 
 ## Quick Setup
 
@@ -65,6 +79,33 @@ Ray-Ban Meta ──► iPhone (camera stream)
                iPhone (tracking + TTS) ──► Glasses (audio)
 ```
 
+## Accessibility Design
+
+This app was built with blind users in mind:
+
+- **No visual dependency** — audio hum provides feedback while pointing, chime confirms lock-on
+- **Hands-free** — no phone interaction needed once started
+- **No repeat announcements** — system remembers what it told you
+- **Open-ear audio** — Ray-Ban Meta glasses let you hear the world while getting spoken info
+- **Forgiving tracking** — brief glances away don't reset the timer
+
+The red crosshair and debug boxes are for sighted developers/helpers only.
+
+---
+
+## Limitations
+
+- Requires WiFi connection to laptop (not standalone)
+- 2-second dwell time may be too long/short for some users
+- YOLOv8 only knows ~80 object categories (COCO dataset)
+- Hasn't been tested extensively with actual blind users yet
+
+---
+
 ## Credits
 
 Built on top of [Blindsighted](https://github.com/DJRHails/blindsighted) by [@DJRHails](https://github.com/DJRHails) - a hackathon template for Ray-Ban Meta glasses.
+
+---
+
+*If you're blind/visually impaired and want to try this, or if you have feedback on how to make it better, please reach out.*
