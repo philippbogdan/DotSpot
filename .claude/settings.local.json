@@ -13,7 +13,8 @@
       "Bash(source .venv/bin/activate)",
       "Bash(ipconfig getifaddr:*)",
       "Bash(git remote remove:*)",
-      "Bash(git remote add:*)"
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
     ]
   }
 }

@@ -9,7 +9,7 @@ import MWDATCore
 import SwiftUI
 
 @main
-struct BlindsightedApp: App {
+struct DotSpotApp: App {
   private let wearables: WearablesInterface
   @StateObject private var wearablesViewModel: WearablesViewModel
 
