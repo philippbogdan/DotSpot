@@ -11,7 +11,9 @@
       "Bash(pip3 install:*)",
       "Bash(xcodebuild:*)",
       "Bash(source .venv/bin/activate)",
-      "Bash(ipconfig getifaddr:*)"
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git remote add:*)"
     ]
   }
 }
