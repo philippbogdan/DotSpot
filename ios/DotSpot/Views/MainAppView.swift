@@ -1,9 +1,8 @@
 //
 // MainAppView.swift
 //
-// Central navigation hub that displays different views based on DAT SDK registration and device states.
-// When unregistered, shows the registration flow. When registered, shows the device selection screen
-// for choosing which Meta wearable device to stream from.
+// Central navigation hub that displays different views based on input source selection.
+// Supports both iPhone camera and Meta glasses modes.
 //
 
 import MWDATCore
@@ -12,6 +11,7 @@ import SwiftUI
 struct MainAppView: View {
   let wearables: WearablesInterface
   @ObservedObject private var viewModel: WearablesViewModel
+  @ObservedObject private var inputSourceManager = InputSourceManager.shared
 
   init(wearables: WearablesInterface, viewModel: WearablesViewModel) {
     self.wearables = wearables
@@ -19,11 +19,19 @@ struct MainAppView: View {
   }
 
   var body: some View {
-    if viewModel.registrationState == .registered || viewModel.hasMockDevice {
-      StreamSessionView(wearables: wearables)
-    } else {
-      // User not registered - show registration/onboarding flow
-      HomeScreenView(viewModel: viewModel)
+    Group {
+      // Check if iPhone mode is selected
+      if inputSourceManager.selectedSource == .iPhone {
+        iPhoneStreamSessionView()
+      }
+      // Check if Meta glasses are registered
+      else if viewModel.registrationState == .registered || viewModel.hasMockDevice {
+        StreamSessionView(wearables: wearables)
+      }
+      // Show home screen for source selection
+      else {
+        HomeScreenView(viewModel: viewModel)
+      }
     }
   }
 }

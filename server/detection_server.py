@@ -22,7 +22,7 @@ from ultralytics import YOLO
 
 # Load YOLOv8m model (medium - good balance of speed and accuracy)
 print("Loading YOLOv8m model...")
-model = YOLO("yolov8m.pt")
+model = YOLO("yolov8s.pt")
 print("Model loaded!")
 
 

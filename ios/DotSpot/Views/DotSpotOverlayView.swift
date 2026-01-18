@@ -26,13 +26,31 @@ struct DotSpotOverlayView: View {
         VStack {
           HStack {
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 4) {
+              // Connection status
               HStack(spacing: 4) {
                 Circle()
                   .fill(viewModel.isConnected ? Color.green : Color.red)
                   .frame(width: 8, height: 8)
-                Text(viewModel.isConnected ? "Connected" : "Disconnected")
+                Text(viewModel.isConnected ? "Server" : "Disconnected")
               }
+
+              // Edge compute toggle
+              Button {
+                viewModel.setEdgeComputeEnabled(!viewModel.isEdgeComputeEnabled)
+              } label: {
+                HStack(spacing: 4) {
+                  Circle()
+                    .fill(viewModel.isUsingEdgeCompute ? Color.green : (viewModel.isEdgeComputeEnabled ? Color.yellow : Color.gray))
+                    .frame(width: 8, height: 8)
+                  Text(viewModel.isConnected ? "Edge (Server active)" : (viewModel.isEdgeComputeEnabled ? "Edge ON" : "Edge OFF"))
+                }
+                .opacity(viewModel.canToggleEdgeCompute ? 1.0 : 0.5)
+              }
+              .disabled(!viewModel.canToggleEdgeCompute)
+              .accessibilityLabel("Edge compute toggle")
+              .accessibilityHint(viewModel.canToggleEdgeCompute ? "Toggles on-device object detection" : "Disabled while connected to server")
+
               Text("Frames: \(viewModel.detectionCount) | Objects: \(viewModel.trackedObjects.count)")
               Text("Inference: \(String(format: "%.0f", viewModel.inferenceTime))ms")
             }
@@ -103,28 +121,29 @@ struct CenterDotView: View {
   let dwellProgress: Double
   let hasTarget: Bool
 
-  // Dot size
-  private let baseSize: CGFloat = 16
-  private let maxSize: CGFloat = 24
+  // Circle size - this is the targeting circle
+  static let circleSize: CGFloat = 80
+  private let outlineWidth: CGFloat = 2
+  private let centerDotSize: CGFloat = 6
 
   var body: some View {
     ZStack {
-      // Outer ring (progress indicator)
+      // Main targeting circle (opaque outline)
+      Circle()
+        .stroke(Color.red.opacity(0.6), lineWidth: outlineWidth)
+        .frame(width: Self.circleSize, height: Self.circleSize)
+
+      // Progress ring (fills as dwell time increases)
       Circle()
         .trim(from: 0, to: dwellProgress)
-        .stroke(Color.red, lineWidth: 2)
-        .frame(width: maxSize, height: maxSize)
+        .stroke(Color.red, lineWidth: outlineWidth + 1)
+        .frame(width: Self.circleSize, height: Self.circleSize)
         .rotationEffect(.degrees(-90))
 
-      // Center dot
+      // Tiny center dot
       Circle()
         .fill(Color.red)
-        .frame(width: baseSize, height: baseSize)
-
-      // Crosshair lines
-      if !hasTarget {
-        CrosshairLines()
-      }
+        .frame(width: centerDotSize, height: centerDotSize)
     }
   }
 }

@@ -14,7 +14,10 @@
       "Bash(ipconfig getifaddr:*)",
       "Bash(git remote remove:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(ls:*)"
     ]
   }
 }

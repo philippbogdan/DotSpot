@@ -23,24 +23,33 @@ class DotSpotViewModel: ObservableObject {
     }
   }
   @Published var isDebugMode = false
+  @Published var isEdgeComputeEnabled = false  // Use on-device YOLOv8n instead of server
   @Published var trackedObjects: [TrackedObject] = []
   @Published var currentPointedObject: TrackedObject?
   @Published var dwellProgress: Double = 0  // 0-1, for UI feedback
   @Published var detectionCount: Int = 0  // Debug: number of detections run
   @Published var inferenceTime: Double = 0  // Debug: last inference time in ms
   @Published var isConnected = false  // Remote server connection status
+  @Published var isUsingEdgeCompute = false  // Actually using edge compute right now
 
   // MARK: - Configuration
 
   // Your laptop's IP address
-  static let serverURL = "ws://10.154.18.227:8765"
+  static let serverURL = "ws://172.20.10.2:8765"
 
   // MARK: - Private Properties
 
   private let remoteDetector = RemoteObjectDetector.shared
+  private let localDetector = LocalObjectDetector.shared
   private let objectTracker = ObjectTracker()
   private let speechManager = SpeechManager.shared
   private let audioManager = DotSpotAudioManager.shared
+  private let hapticManager = HapticManager.shared
+
+  // Use haptics instead of audio for iPhone mode
+  private var useHaptics: Bool {
+    InputSourceManager.shared.selectedSource == .iPhone
+  }
 
   private var lastProcessedTime: Date?
   private var lastAnnouncedObjectId: UUID?
@@ -48,21 +57,47 @@ class DotSpotViewModel: ObservableObject {
   private var isProcessingFrame = false
   private var cancellables = Set<AnyCancellable>()
 
-  // Detection runs at 5 FPS (every 6th frame at 30fps)
-  private let detectionInterval = 6
+  // Detection runs at 10 FPS (every 3rd frame at 30fps)
+  private let detectionInterval = 3
 
-  // Dwell time required for announcement (2 seconds)
-  private let requiredDwellTime: TimeInterval = 2.0
+  // Dwell time required for announcement (1 second)
+  private let requiredDwellTime: TimeInterval = 1.0
 
   init() {
     // Observe remote detector connection status
     remoteDetector.$isConnected
       .receive(on: DispatchQueue.main)
-      .assign(to: &$isConnected)
+      .sink { [weak self] connected in
+        self?.isConnected = connected
+        // Update which detector is being used
+        self?.updateDetectorMode()
+      }
+      .store(in: &cancellables)
 
+    // Observe inference times from both detectors
     remoteDetector.$lastInferenceTime
       .receive(on: DispatchQueue.main)
-      .assign(to: &$inferenceTime)
+      .sink { [weak self] time in
+        if self?.isUsingEdgeCompute == false {
+          self?.inferenceTime = time
+        }
+      }
+      .store(in: &cancellables)
+
+    localDetector.$lastInferenceTime
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] time in
+        if self?.isUsingEdgeCompute == true {
+          self?.inferenceTime = time
+        }
+      }
+      .store(in: &cancellables)
+  }
+
+  private func updateDetectorMode() {
+    // Server takes priority when connected
+    // Edge compute only used when enabled AND not connected to server
+    isUsingEdgeCompute = isEdgeComputeEnabled && !isConnected
   }
 
   // MARK: - Public Methods
@@ -89,26 +124,39 @@ class DotSpotViewModel: ObservableObject {
     }
     lastProcessedTime = now
 
-    // Run remote object detection
+    // Run object detection (local or remote based on mode)
     isProcessingFrame = true
-    remoteDetector.detect(in: image) { [weak self] detections in
+
+    let handleDetections: ([Detection]) -> Void = { [weak self] detections in
       guard let self = self else { return }
 
       self.isProcessingFrame = false
       self.detectionCount += 1
 
       if !detections.isEmpty {
-        print("[DotSpot] Frame \(self.detectionCount): Found \(detections.count) objects - \(detections.map { $0.label }.joined(separator: ", "))")
+        let mode = self.isUsingEdgeCompute ? "Edge" : "Server"
+        print("[DotSpot/\(mode)] Frame \(self.detectionCount): Found \(detections.count) objects - \(detections.map { $0.label }.joined(separator: ", "))")
       }
 
       // Update tracker
       self.trackedObjects = self.objectTracker.update(detections: detections, deltaTime: deltaTime)
 
       // Find object at pointer (center + 0.1 down = 0.6 y)
+      // Circle radius normalized to frame size (80px targeting circle)
       let centerPoint = CGPoint(x: 0.5, y: 0.6)
-      let pointedObject = self.objectTracker.findObjectAtCenter(centerPoint: centerPoint)
+      let targetingCircleSize: CGFloat = 80
+      let circleRadius = targetingCircleSize / max(image.size.width, image.size.height)
+      let pointedObject = self.objectTracker.findObjectAtCenter(centerPoint: centerPoint, circleRadius: circleRadius)
 
       self.handlePointedObject(pointedObject, deltaTime: deltaTime)
+    }
+
+    if isUsingEdgeCompute {
+      // Use on-device YOLOv8n
+      localDetector.detect(in: image, completion: handleDetections)
+    } else {
+      // Use remote server
+      remoteDetector.detect(in: image, completion: handleDetections)
     }
   }
 
@@ -120,6 +168,16 @@ class DotSpotViewModel: ObservableObject {
     remoteDetector.disconnect()
   }
 
+  func setEdgeComputeEnabled(_ enabled: Bool) {
+    isEdgeComputeEnabled = enabled
+    updateDetectorMode()
+  }
+
+  var canToggleEdgeCompute: Bool {
+    // Can only toggle edge compute when not connected to server
+    !isConnected
+  }
+
   func reset() {
     objectTracker.reset()
     trackedObjects = []
@@ -129,7 +187,11 @@ class DotSpotViewModel: ObservableObject {
     lastProcessedTime = nil
     frameCounter = 0
     isProcessingFrame = false
-    audioManager.stopHum()
+    if useHaptics {
+      hapticManager.stopContinuousHaptic()
+    } else {
+      audioManager.stopHum()
+    }
   }
 
 
@@ -169,24 +231,41 @@ class DotSpotViewModel: ObservableObject {
       } else {
         // Different object - check if it was already announced
         if pointed.id == lastAnnouncedObjectId {
-          // Coming back to announced object - silence, no hum
+          // Coming back to announced object - silence, no feedback
           currentPointedObject = pointed
           dwellProgress = 1.0
-          audioManager.setHumVolume(0)
+          if useHaptics {
+            hapticManager.setIntensity(0)
+          } else {
+            audioManager.setHumVolume(0)
+          }
         } else {
-          // New object - start fresh
+          // New object - start fresh and clear previous announcement memory
+          // This allows re-announcing objects after looking at something else
+          lastAnnouncedObjectId = nil
+          objectTracker.clearAnnouncedFlag(for: pointed.id)
+
           currentPointedObject = pointed
           objectTracker.resetDwellTime(for: pointed.id)
           dwellProgress = 0
-          audioManager.setHumVolume(1.0)
-          audioManager.startHum()
+          if useHaptics {
+            hapticManager.setIntensity(1.0)
+            hapticManager.startContinuousHaptic()
+          } else {
+            audioManager.setHumVolume(1.0)
+            audioManager.startHum()
+          }
         }
       }
     } else {
       // No object pointed at
       currentPointedObject = nil
       dwellProgress = 0
-      audioManager.setHumVolume(0)
+      if useHaptics {
+        hapticManager.setIntensity(0)
+      } else {
+        audioManager.setHumVolume(0)
+      }
     }
   }
 
@@ -201,11 +280,21 @@ class DotSpotViewModel: ObservableObject {
   private func updateAudioFeedback(_ object: TrackedObject) {
     if object.wasAnnounced || object.id == lastAnnouncedObjectId {
       // Already announced - silence
-      audioManager.setHumVolume(0)
+      if useHaptics {
+        hapticManager.setIntensity(0)
+      } else {
+        audioManager.setHumVolume(0)
+      }
     } else {
-      // Hum volume decreases as dwell time increases
-      let volume = Float(1.0 - dwellProgress)
-      audioManager.setHumVolume(volume)
+      // Feedback intensity increases as dwell time increases (opposite of audio which decreases)
+      if useHaptics {
+        let intensity = Float(dwellProgress)  // Intensity increases with dwell
+        hapticManager.setIntensity(intensity)
+      } else {
+        // Audio volume decreases as dwell time increases
+        let volume = Float(1.0 - dwellProgress)
+        audioManager.setHumVolume(volume)
+      }
     }
   }
 
@@ -221,11 +310,16 @@ class DotSpotViewModel: ObservableObject {
   }
 
   private func announceObject(_ object: TrackedObject) {
-    // Stop hum
-    audioManager.stopHum()
-
-    // Play lock-on chime
-    audioManager.playLockOnChime()
+    // Stop feedback
+    if useHaptics {
+      hapticManager.stopContinuousHaptic()
+      // Play lock-on haptic
+      hapticManager.playLockOnHaptic()
+    } else {
+      audioManager.stopHum()
+      // Play lock-on chime
+      audioManager.playLockOnChime()
+    }
 
     // Mark as announced
     objectTracker.markAsAnnounced(objectId: object.id)

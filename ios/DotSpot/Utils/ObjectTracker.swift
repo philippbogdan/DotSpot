@@ -112,6 +112,12 @@ class ObjectTracker {
     }
   }
 
+  func clearAnnouncedFlag(for objectId: UUID) {
+    if let index = trackedObjects.firstIndex(where: { $0.id == objectId }) {
+      trackedObjects[index].wasAnnounced = false
+    }
+  }
+
   func resetDwellTime(for objectId: UUID) {
     if let index = trackedObjects.firstIndex(where: { $0.id == objectId }) {
       trackedObjects[index].dwellTime = 0
@@ -122,16 +128,83 @@ class ObjectTracker {
     trackedObjects.first { $0.id == id }
   }
 
-  func findObjectAtCenter(centerPoint: CGPoint) -> TrackedObject? {
-    // Find all objects whose bounding box contains the center point
-    let candidates = trackedObjects.filter { $0.boundingBox.contains(centerPoint) }
+  func findObjectAtCenter(centerPoint: CGPoint, circleRadius: CGFloat) -> TrackedObject? {
+    // Score each object based on: (overlap_area / circle_area) / box_area
+    // Higher score = better match (more overlap relative to box size)
 
-    // Return the smallest one (most specific/innermost object)
-    return candidates.min { a, b in
-      let areaA = a.boundingBox.width * a.boundingBox.height
-      let areaB = b.boundingBox.width * b.boundingBox.height
-      return areaA < areaB
+    var bestObject: TrackedObject?
+    var bestScore: CGFloat = 0
+
+    let circleArea = CGFloat.pi * circleRadius * circleRadius
+
+    for tracked in trackedObjects {
+      let overlapArea = calculateCircleRectOverlap(
+        circleCenter: centerPoint,
+        circleRadius: circleRadius,
+        rect: tracked.boundingBox
+      )
+
+      guard overlapArea > 0 else { continue }
+
+      let boxArea = tracked.boundingBox.width * tracked.boundingBox.height
+      guard boxArea > 0 else { continue }
+
+      // Score formula: (overlap / circle_area) / box_area
+      // This favors boxes that have high overlap AND are small (specific objects)
+      let overlapRatio = overlapArea / circleArea
+      let score = overlapRatio / boxArea
+
+      if score > bestScore {
+        bestScore = score
+        bestObject = tracked
+      }
     }
+
+    return bestObject
+  }
+
+  // Legacy method for backward compatibility
+  func findObjectAtCenter(centerPoint: CGPoint) -> TrackedObject? {
+    // Default circle radius of 0.05 (5% of frame, approximating 80px in typical 1280px frame)
+    return findObjectAtCenter(centerPoint: centerPoint, circleRadius: 0.05)
+  }
+
+  private func calculateCircleRectOverlap(circleCenter: CGPoint, circleRadius: CGFloat, rect: CGRect) -> CGFloat {
+    // Approximate circle-rectangle intersection using sampling
+    // For better performance, we use a grid sampling approach
+
+    let samples = 8  // Sample points along radius
+    var insideCount: CGFloat = 0
+    let totalSamples = samples * samples * 4  // 4 quadrants
+
+    for i in 0..<samples {
+      for j in 0..<samples {
+        // Sample in all 4 quadrants
+        let dx = CGFloat(i + 1) / CGFloat(samples) * circleRadius
+        let dy = CGFloat(j + 1) / CGFloat(samples) * circleRadius
+
+        // Check if within circle (dx^2 + dy^2 <= r^2)
+        if dx * dx + dy * dy <= circleRadius * circleRadius {
+          // Check all 4 quadrant points
+          let points = [
+            CGPoint(x: circleCenter.x + dx, y: circleCenter.y + dy),
+            CGPoint(x: circleCenter.x - dx, y: circleCenter.y + dy),
+            CGPoint(x: circleCenter.x + dx, y: circleCenter.y - dy),
+            CGPoint(x: circleCenter.x - dx, y: circleCenter.y - dy)
+          ]
+
+          for point in points {
+            if rect.contains(point) {
+              insideCount += 1
+            }
+          }
+        }
+      }
+    }
+
+    // Estimate overlap area as proportion of circle area
+    let circleArea = CGFloat.pi * circleRadius * circleRadius
+    return (insideCount / CGFloat(totalSamples)) * circleArea
   }
 
   func reset() {

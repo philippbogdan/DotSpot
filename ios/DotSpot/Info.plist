@@ -66,6 +66,8 @@
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Needed to connect to Meta AI Glasses</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is needed to identify objects you point at.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location data is used to add geotags to your recorded videos for lifelog tracking.</string>
 	<key>NSMicrophoneUsageDescription</key>
