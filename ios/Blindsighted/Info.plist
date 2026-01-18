@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>APIConfig</key>
+	<dict>
+		<key>BaseURL</key>
+		<string>$(API_BASE_URL)</string>
+	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -37,6 +42,17 @@
 	<array>
 		<string>fb-viewapp</string>
 	</array>
+	<key>LiveKitConfig</key>
+	<dict>
+		<key>AgentName</key>
+		<string>$(LIVEKIT_AGENT_NAME)</string>
+		<key>DevRoomName</key>
+		<string>$(LIVEKIT_DEV_ROOM_NAME)</string>
+		<key>DevToken</key>
+		<string>$(LIVEKIT_DEV_TOKEN)</string>
+		<key>ServerURL</key>
+		<string>$(LIVEKIT_SERVER_URL)</string>
+	</dict>
 	<key>MWDAT</key>
 	<dict>
 		<key>AppLinkURLScheme</key>
@@ -89,21 +105,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>APIConfig</key>
-	<dict>
-		<key>BaseURL</key>
-		<string>$(API_BASE_URL)</string>
-	</dict>
-	<key>LiveKitConfig</key>
-	<dict>
-		<key>ServerURL</key>
-		<string>$(LIVEKIT_SERVER_URL)</string>
-		<key>AgentName</key>
-		<string>$(LIVEKIT_AGENT_NAME)</string>
-		<key>DevToken</key>
-		<string>$(LIVEKIT_DEV_TOKEN)</string>
-		<key>DevRoomName</key>
-		<string>$(LIVEKIT_DEV_ROOM_NAME)</string>
-	</dict>
 </dict>
 </plist>

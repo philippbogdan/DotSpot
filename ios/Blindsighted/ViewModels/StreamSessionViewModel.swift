@@ -200,8 +200,9 @@ class StreamSessionViewModel: ObservableObject {
   func startSession() async {
     await streamSession.start()
 
-    // Auto-connect to LiveKit if configured
-    if let config = liveKitConfig, let manager = liveKitManager, !isLiveKitConnected {
+    // Auto-connect to LiveKit disabled for DotSpot demo
+    // To re-enable, uncomment the line below
+    if false, let config = liveKitConfig, let manager = liveKitManager, !isLiveKitConnected {
       do {
         // Get credentials based on mode
         let credentials: LiveKitSessionCredentials

@@ -12,7 +12,6 @@ import SwiftUI
 struct MainAppView: View {
   let wearables: WearablesInterface
   @ObservedObject private var viewModel: WearablesViewModel
-  @State private var selectedTab: Int = 0
 
   init(wearables: WearablesInterface, viewModel: WearablesViewModel) {
     self.wearables = wearables
@@ -21,35 +20,7 @@ struct MainAppView: View {
 
   var body: some View {
     if viewModel.registrationState == .registered || viewModel.hasMockDevice {
-      TabView(selection: $selectedTab) {
-        StreamSessionView(wearables: wearables, wearablesVM: viewModel)
-          .tabItem {
-            Label("Stream", systemImage: "video")
-          }
-          .tag(0)
-          .accessibilityLabel("Video streaming tab")
-          .accessibilityHint("Record video from your glasses")
-
-        LifelogView()
-          .tabItem {
-            Label("Lifelog", systemImage: "calendar")
-          }
-          .tag(1)
-          .accessibilityLabel("Lifelog tab")
-          .accessibilityHint("Browse your recorded memories")
-
-        AudioTestView()
-          .tabItem {
-            Label("Audio", systemImage: "headphones")
-          }
-          .tag(2)
-          .accessibilityLabel("Audio testing tab")
-          .accessibilityHint("Test audio routing to your glasses")
-      }
-      .task {
-        // Sync lifelog with cloud on app launch
-        await LifelogSyncManager.shared.sync()
-      }
+      StreamSessionView(wearables: wearables)
     } else {
       // User not registered - show registration/onboarding flow
       HomeScreenView(viewModel: viewModel)

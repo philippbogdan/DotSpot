@@ -16,9 +16,13 @@
 		2658C6B816296F40AF610C8C /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24CAA0CF5F78EFD5AA49AD32 /* LocationManager.swift */; };
 		36D904DCCAF867D40E5E3EEC /* AudioCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5BDB9829320DD5FD1D86C5 /* AudioCaptureManager.swift */; };
 		3EF0E5D9F4F3939E0328E694 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FBF1B9A4137446FC49EE27 /* AudioManager.swift */; };
+		49B5DD48B86D75EDD056EC68 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79282BCCBEFE9C4ADB8D0700 /* SpeechManager.swift */; };
 		4D7D8EA119AE050C9044FFB2 /* AudioTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0100FB0CC48442082755E922 /* AudioTestView.swift */; };
+		58D86BF2FEAC3EDA1070464D /* yolov8n.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 03D7336DBEE012AC75B56F1D /* yolov8n.mlpackage */; };
 		7361279827B5425615421C26 /* PreviewVideoFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */; };
 		7451E8B7CBAE1B46C1684F73 /* LiveKitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2624254004236E8AAC8C71 /* LiveKitConfig.swift */; };
+		786FABFCE2C061796178D973 /* ObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADA0830466354291C04F44A /* ObjectDetector.swift */; };
+		7EE877F4F09F01502719D673 /* ObjectTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF201A1EC997F01E45416BD /* ObjectTracker.swift */; };
 		8F2D23802E856711002D0588 /* DebugMenuViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */; };
 		8F8F00782E8ACB4600A4BDAF /* WearablesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */; };
 		8FD96B7F2E6F0A9800F56AB1 /* BlindsightedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD96B792E6F0A9800F56AB1 /* BlindsightedApp.swift */; };
@@ -39,7 +43,11 @@
 		8FFD60602E84A2F70035E446 /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605F2E84A2F70035E446 /* MainAppView.swift */; };
 		8FFD60612E84A2F70035E446 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */; };
 		9CDE2A402E6F101100B7F891 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9CDE2A3F2E6F101100B7F891 /* LiveKit */; };
+		A59FD3BB21A6D3873F30B65A /* DotSpotOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575576CC76781A5980111D5F /* DotSpotOverlayView.swift */; };
 		A7F63494631A1366EC67F4D4 /* LiveKitSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */; };
+		B0F42178697D8EA570CC46A0 /* DotSpotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2E4A2D6C56FFED9B64E82B /* DotSpotViewModel.swift */; };
+		D581E022F552E27D5B933550 /* RemoteObjectDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727319A9A6810FF62B064938 /* RemoteObjectDetector.swift */; };
+		DD196753ABDC02792481B56B /* DotSpotAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C7BE986F91BA8CAB6C4DE1 /* DotSpotAudioManager.swift */; };
 		E3404C0C2F197F100060330D /* VideoFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0A2F197F100060330D /* VideoFileManager.swift */; };
 		E3404C0D2F197F100060330D /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0B2F197F100060330D /* VideoRecorder.swift */; };
 		E3404C102F197F280060330D /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0F2F197F280060330D /* VideoPlayerView.swift */; };
@@ -80,8 +88,10 @@
 
 /* Begin PBXFileReference section */
 		0100FB0CC48442082755E922 /* AudioTestView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioTestView.swift; sourceTree = "<group>"; };
+		03D7336DBEE012AC75B56F1D /* yolov8n.mlpackage */ = {isa = PBXFileReference; includeInIndex = 1; path = yolov8n.mlpackage; sourceTree = "<group>"; };
 		0866ED6D8B295B34C2E33BA0 /* LiveKitManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitManager.swift; sourceTree = "<group>"; };
 		0B0028DE23F5C74C1828B9AA /* Config.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		16C7BE986F91BA8CAB6C4DE1 /* DotSpotAudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DotSpotAudioManager.swift; sourceTree = "<group>"; };
 		24CAA0CF5F78EFD5AA49AD32 /* LocationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		2A0F08BAC0F3290D10A14384 /* AudioTestView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioTestView.swift; sourceTree = "<group>"; };
 		3A3A3A3A3A3A3A3A3A3A3A3A /* Blindsighted.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blindsighted.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,7 +99,10 @@
 		4AFEB3EC3CB48EFDBA6D4593 /* LifelogDayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LifelogDayView.swift; sourceTree = "<group>"; };
 		4E728DACFA5D93E9D63D4F96 /* PreviewVideoSeeder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PreviewVideoSeeder.swift; sourceTree = "<group>"; };
 		52B78A156B637E320CC7C498 /* LifelogSyncManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LifelogSyncManager.swift; sourceTree = "<group>"; };
+		575576CC76781A5980111D5F /* DotSpotOverlayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DotSpotOverlayView.swift; sourceTree = "<group>"; };
 		6DB9AF0994BD6E62E7F77EB0 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		727319A9A6810FF62B064938 /* RemoteObjectDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RemoteObjectDetector.swift; sourceTree = "<group>"; };
+		79282BCCBEFE9C4ADB8D0700 /* SpeechManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
 		86534376D936A121CECE61BE /* LocationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuViewModel.swift; sourceTree = "<group>"; };
 		8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearablesViewModel.swift; sourceTree = "<group>"; };
@@ -110,7 +123,9 @@
 		8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
 		8FFD605F2E84A2F70035E446 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
 		97FBF1B9A4137446FC49EE27 /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		ABF201A1EC997F01E45416BD /* ObjectTracker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ObjectTracker.swift; sourceTree = "<group>"; };
 		AC2624254004236E8AAC8C71 /* LiveKitConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitConfig.swift; sourceTree = "<group>"; };
+		BE2E4A2D6C56FFED9B64E82B /* DotSpotViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DotSpotViewModel.swift; sourceTree = "<group>"; };
 		D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PreviewVideoFileManager.swift; sourceTree = "<group>"; };
 		D44CA48B3558E3BBC2F5925C /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		E3404C0A2F197F100060330D /* VideoFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFileManager.swift; sourceTree = "<group>"; };
@@ -125,6 +140,7 @@
 		E6DA45182E79A63100E3F688 /* MockDeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceCardView.swift; sourceTree = "<group>"; };
 		E6DA451A2E79A63100E3F688 /* MockDeviceKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitView.swift; sourceTree = "<group>"; };
 		E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonStreamView.swift; sourceTree = "<group>"; };
+		EADA0830466354291C04F44A /* ObjectDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ObjectDetector.swift; sourceTree = "<group>"; };
 		FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -192,6 +208,7 @@
 				8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */,
 				8FD96B6F2E6F0A9800F56AB1 /* StreamSessionViewModel.swift */,
 				8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */,
+				BE2E4A2D6C56FFED9B64E82B /* DotSpotViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -215,6 +232,7 @@
 				0100FB0CC48442082755E922 /* AudioTestView.swift */,
 				FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */,
 				4AFEB3EC3CB48EFDBA6D4593 /* LifelogDayView.swift */,
+				575576CC76781A5980111D5F /* DotSpotOverlayView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -229,6 +247,7 @@
 				8FD96B782E6F0A9800F56AB1 /* Blindsighted.entitlements */,
 				8FD96B792E6F0A9800F56AB1 /* BlindsightedApp.swift */,
 				8FD96B7B2E6F0A9800F56AB1 /* Info.plist */,
+				03D7336DBEE012AC75B56F1D /* yolov8n.mlpackage */,
 			);
 			path = Blindsighted;
 			sourceTree = "<group>";
@@ -260,6 +279,11 @@
 				D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */,
 				4E728DACFA5D93E9D63D4F96 /* PreviewVideoSeeder.swift */,
 				52B78A156B637E320CC7C498 /* LifelogSyncManager.swift */,
+				EADA0830466354291C04F44A /* ObjectDetector.swift */,
+				ABF201A1EC997F01E45416BD /* ObjectTracker.swift */,
+				79282BCCBEFE9C4ADB8D0700 /* SpeechManager.swift */,
+				16C7BE986F91BA8CAB6C4DE1 /* DotSpotAudioManager.swift */,
+				727319A9A6810FF62B064938 /* RemoteObjectDetector.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -429,6 +453,14 @@
 				F5CA9E6B4755AAE815951ACE /* LifelogDayView.swift in Sources */,
 				F9B689D748BAF0A123792860 /* PreviewVideoSeeder.swift in Sources */,
 				19E457CD71E5D4AF4E94D3F7 /* LifelogSyncManager.swift in Sources */,
+				786FABFCE2C061796178D973 /* ObjectDetector.swift in Sources */,
+				7EE877F4F09F01502719D673 /* ObjectTracker.swift in Sources */,
+				49B5DD48B86D75EDD056EC68 /* SpeechManager.swift in Sources */,
+				DD196753ABDC02792481B56B /* DotSpotAudioManager.swift in Sources */,
+				B0F42178697D8EA570CC46A0 /* DotSpotViewModel.swift in Sources */,
+				A59FD3BB21A6D3873F30B65A /* DotSpotOverlayView.swift in Sources */,
+				58D86BF2FEAC3EDA1070464D /* yolov8n.mlpackage in Sources */,
+				D581E022F552E27D5B933550 /* RemoteObjectDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,7 +494,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 59L345955F;
+				DEVELOPMENT_TEAM = S7M84L8KV5;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Blindsighted/Info.plist;
@@ -473,7 +505,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = info.hails.blindsighted;
+				PRODUCT_BUNDLE_IDENTIFIER = com.philipp.blindsighted;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -493,7 +525,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 59L345955F;
+				DEVELOPMENT_TEAM = S7M84L8KV5;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Blindsighted/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Blindsighted;
@@ -503,7 +535,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = info.hails.blindsighted;
+				PRODUCT_BUNDLE_IDENTIFIER = com.philipp.blindsighted;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

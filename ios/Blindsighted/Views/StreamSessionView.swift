@@ -8,12 +8,10 @@ import SwiftUI
 
 struct StreamSessionView: View {
   let wearables: WearablesInterface
-  @ObservedObject private var wearablesViewModel: WearablesViewModel
   @StateObject private var viewModel: StreamSessionViewModel
 
-  init(wearables: WearablesInterface, wearablesVM: WearablesViewModel) {
+  init(wearables: WearablesInterface) {
     self.wearables = wearables
-    self.wearablesViewModel = wearablesVM
     self._viewModel = StateObject(wrappedValue: StreamSessionViewModel(wearables: wearables))
   }
 
@@ -21,10 +19,10 @@ struct StreamSessionView: View {
     ZStack {
       if viewModel.isStreaming {
         // Full-screen video view with streaming controls
-        StreamView(viewModel: viewModel, wearablesVM: wearablesViewModel)
+        StreamView(viewModel: viewModel)
       } else {
         // Pre-streaming setup view with permissions and start button
-        NonStreamView(viewModel: viewModel, wearablesVM: wearablesViewModel)
+        NonStreamView(viewModel: viewModel)
       }
     }
     .alert("Error", isPresented: $viewModel.showError) {

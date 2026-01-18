@@ -13,33 +13,26 @@ struct HomeScreenView: View {
 
   var body: some View {
     ZStack {
-      Color(UIColor.systemBackground).edgesIgnoringSafeArea(.all)
+      Color.black.edgesIgnoringSafeArea(.all)
 
-      VStack(spacing: 12) {
+      VStack(spacing: 24) {
         Spacer()
 
-        Image(.blindsightedIcon)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: 120)
-          .accessibilityHidden(true)
+        VStack(spacing: 24) {
+          // White circle with DotSpot text
+          ZStack {
+            Circle()
+              .fill(Color.white)
+              .frame(width: 160, height: 160)
 
-        VStack(spacing: 12) {
-          HomeTipItemView(
-            resource: .smartGlassesIcon,
-            title: "Video Capture",
-            text: "Record videos directly from your glasses, from your point of view."
-          )
-          HomeTipItemView(
-            resource: .soundIcon,
-            title: "Open-Ear Audio",
-            text: "Hear notifications while keeping your ears open to the world around you."
-          )
-          HomeTipItemView(
-            resource: .walkingIcon,
-            title: "Enjoy On-the-Go",
-            text: "Stay hands-free while you move through your day. Move freely, stay connected."
-          )
+            Text("DotSpot")
+              .font(.system(size: 24, weight: .bold))
+              .foregroundColor(.black)
+          }
+
+          Text("Point at objects to identify them")
+            .font(.system(size: 16))
+            .foregroundColor(.white.opacity(0.7))
         }
 
         Spacer()
@@ -47,7 +40,7 @@ struct HomeScreenView: View {
         VStack(spacing: 20) {
           Text("You'll be redirected to the Meta AI app to confirm your connection.")
             .font(.system(size: 14))
-            .foregroundColor(.gray)
+            .foregroundColor(.white.opacity(0.5))
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 12)
@@ -66,37 +59,4 @@ struct HomeScreenView: View {
     }
   }
 
-}
-
-struct HomeTipItemView: View {
-  let resource: ImageResource
-  let title: String
-  let text: String
-
-  var body: some View {
-    HStack(alignment: .top, spacing: 12) {
-      Image(resource)
-        .resizable()
-        .renderingMode(.template)
-        .foregroundColor(.primary)
-        .aspectRatio(contentMode: .fit)
-        .frame(width: 24)
-        .padding(.leading, 4)
-        .padding(.top, 4)
-        .accessibilityHidden(true)
-
-      VStack(alignment: .leading, spacing: 6) {
-        Text(title)
-          .font(.system(size: 18, weight: .semibold))
-          .foregroundColor(.primary)
-
-        Text(text)
-          .font(.system(size: 15))
-          .foregroundColor(.secondary)
-      }
-      Spacer()
-    }
-    .accessibilityElement(children: .combine)
-    .accessibilityLabel("\(title). \(text)")
-  }
 }

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct StreamView: View {
   @ObservedObject var viewModel: StreamSessionViewModel
-  @ObservedObject var wearablesVM: WearablesViewModel
+  @StateObject private var dotSpotViewModel = DotSpotViewModel()
 
   var body: some View {
     ZStack {
@@ -22,12 +22,27 @@ struct StreamView: View {
       // Video backdrop
       if let videoFrame = viewModel.currentVideoFrame, viewModel.hasReceivedFirstFrame {
         GeometryReader { geometry in
-          Image(uiImage: videoFrame)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .accessibilityLabel("Live video stream from glasses")
-            .accessibilityAddTraits(.isImage)
+          ZStack {
+            Image(uiImage: videoFrame)
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(width: geometry.size.width, height: geometry.size.height)
+              .accessibilityLabel("Live video stream from glasses")
+              .accessibilityAddTraits(.isImage)
+
+            // DotSpot overlay
+            if dotSpotViewModel.isEnabled {
+              DotSpotOverlayView(
+                viewModel: dotSpotViewModel,
+                frameSize: geometry.size
+              )
+            }
+          }
+          .onChange(of: viewModel.currentVideoFrame) { _, newFrame in
+            if let frame = newFrame {
+              dotSpotViewModel.processFrame(frame)
+            }
+          }
         }
         .edgesIgnoringSafeArea(.all)
       } else {
@@ -37,58 +52,29 @@ struct StreamView: View {
           .accessibilityLabel("Waiting for video stream")
       }
 
-      // Top-left: Recording indicator
-      if viewModel.isStreaming {
-        VStack {
-          HStack {
-            HStack(spacing: 6) {
-              Circle()
-                .fill(Color.red)
-                .frame(width: 12, height: 12)
-                .accessibilityHidden(true)
-              Text(viewModel.recordingDuration.formattedDuration)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.black.opacity(0.5))
-            .cornerRadius(16)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Recording")
-            .accessibilityValue(viewModel.recordingDuration.formattedDuration)
-            .accessibilityAddTraits(.updatesFrequently)
-            Spacer()
-          }
-          Spacer()
-        }
-        .padding(.all, 24)
-      }
+      // Top: Toggles
+      VStack {
+        HStack(spacing: 12) {
+          // DotSpot toggle
+          ToggleButton(
+            title: "DotSpot",
+            isOn: $dotSpotViewModel.isEnabled
+          )
 
-      // Top-right: LiveKit connection indicator
-      if viewModel.isLiveKitConnected {
-        VStack {
-          HStack {
-            Spacer()
-            HStack(spacing: 6) {
-              Circle()
-                .fill(Color.green)
-                .frame(width: 12, height: 12)
-                .accessibilityHidden(true)
-              Text("LIVE")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.black.opacity(0.5))
-            .cornerRadius(16)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("LiveKit connection status: Live")
+          // Debug toggle (only show when DotSpot is on)
+          if dotSpotViewModel.isEnabled {
+            ToggleButton(
+              title: "Debug",
+              isOn: $dotSpotViewModel.isDebugMode
+            )
           }
+
           Spacer()
         }
-        .padding(.all, 24)
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
+
+        Spacer()
       }
 
       // Bottom controls layer
@@ -109,6 +95,29 @@ struct StreamView: View {
         )
       }
     }
+    .onDisappear {
+      dotSpotViewModel.reset()
+    }
+  }
+}
+
+struct ToggleButton: View {
+  let title: String
+  @Binding var isOn: Bool
+
+  var body: some View {
+    Button(action: { isOn.toggle() }) {
+      Text(title)
+        .font(.system(size: 14, weight: .medium))
+        .foregroundColor(isOn ? .black : .white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(isOn ? Color.white : Color.white.opacity(0.2))
+        .cornerRadius(20)
+    }
+    .accessibilityLabel("\(title) mode")
+    .accessibilityValue(isOn ? "On" : "Off")
+    .accessibilityHint("Double tap to toggle")
   }
 }// Extracted controls for clarity
 struct ControlsView: View {
@@ -117,15 +126,15 @@ struct ControlsView: View {
     // Controls row
     HStack(spacing: 8) {
       CustomButton(
-        title: "Stop recording",
-        style: .destructive,
+        title: "Stop",
+        style: .primary,
         isDisabled: false
       ) {
         Task {
           await viewModel.stopSession()
         }
       }
-      .accessibilityHint("Stops video recording and returns to home screen")
+      .accessibilityHint("Stops the stream and returns to home screen")
 
       // Photo button
       CircleButton(

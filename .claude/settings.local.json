@@ -1,34 +1,17 @@
 {
-    "permissions": {
-        "allow": [
-            "Bash(npm version:*)",
-            "mcp__playwriter__execute",
-            "Bash(git add:*)",
-            "Bash(git commit:*)",
-            "Bash(gh secret:*)",
-            "Bash(gh run rerun:*)",
-            "Bash(gh workflow run:*)",
-            "WebSearch",
-            "Bash(plutil:*)",
-            "Bash(xcodebuild:*)",
-            "Bash(pod install:*)",
-            "Bash(ls:*)",
-            "Bash(xargs:*)",
-            "Bash(pod spec:*)",
-            "Bash(find:*)",
-            "Bash(grep:*)",
-            "Bash(tree:*)",
-            "Bash(git push:*)",
-            "Bash(ssh:*)", // Allowed for checking deployments
-            "Bash(openssl rand:*)",
-            "Bash(uv pip install:*)",
-            "Bash(alembic init:*)",
-            "mcp__context7__resolve-library-id",
-            "mcp__context7__query-docs",
-            "Bash(uv run alembic revision:*)",
-            "WebFetch(domain:github.com)",
-            "Bash(tee:*)",
-            "Bash(chmod:*)"
-        ]
-    }
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(ruby -e:*)",
+      "Bash(gem install:*)",
+      "Bash(ruby:*)",
+      "Bash(pip install:*)",
+      "Bash(python download_yolo_model.py:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(ipconfig getifaddr:*)"
+    ]
+  }
 }

@@ -8,16 +8,8 @@ import Foundation
 import MWDATCore
 import SwiftUI
 
-#if DEBUG
-import MWDATMockDevice
-#endif
-
 @main
 struct BlindsightedApp: App {
-  #if DEBUG
-  // Debug menu for simulating device connections during development
-  @StateObject private var debugMenuViewModel = DebugMenuViewModel(mockDeviceKit: MockDeviceKit.shared)
-  #endif
   private let wearables: WearablesInterface
   @StateObject private var wearablesViewModel: WearablesViewModel
 
@@ -47,14 +39,6 @@ struct BlindsightedApp: App {
         } message: {
           Text(wearablesViewModel.errorMessage)
         }
-        #if DEBUG
-      .sheet(isPresented: $debugMenuViewModel.showDebugMenu) {
-        MockDeviceKitView(viewModel: debugMenuViewModel.mockDeviceKitViewModel)
-      }
-      .overlay {
-        DebugMenuView(debugMenuViewModel: debugMenuViewModel)
-      }
-        #endif
 
       // Registration view handles the flow for connecting to the glasses via Meta AI
       RegistrationView(viewModel: wearablesViewModel)

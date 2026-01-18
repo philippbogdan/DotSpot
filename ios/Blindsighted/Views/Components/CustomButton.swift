@@ -18,18 +18,18 @@ struct CustomButton: View {
     var backgroundColor: Color {
       switch self {
       case .primary:
-        return .appPrimary
+        return .white
       case .destructive:
-        return .destructiveBackground
+        return .white
       }
     }
 
     var foregroundColor: Color {
       switch self {
       case .primary:
-        return .white
+        return .black
       case .destructive:
-        return .destructiveForeground
+        return .black
       }
     }
   }
